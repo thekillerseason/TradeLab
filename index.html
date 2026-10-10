@@ -43,7 +43,10 @@ h3{font-size:14px;font-weight:700}
 .nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--nav-ink);text-decoration:none;font-weight:600;font-size:14.5px}
 .nav:hover{background:var(--nav2);color:#fff}
 .nav[aria-current=page]{background:var(--nav2);color:#fff;box-shadow:inset 3px 0 var(--brand-primary)}
-.nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav svg{width:21px;height:21px;stroke:url(#tradelab-nav-gradient);fill:none;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round;flex:none;filter:drop-shadow(0 0 3px rgba(0,229,184,.38))}
+.nav .nav-icon-fill{fill:url(#tradelab-nav-gradient);stroke:none}
+.nav[aria-current=page] svg,.nav:hover svg{filter:drop-shadow(0 0 5px rgba(0,229,184,.68))}
+.nav-defs{position:absolute;width:0;height:0;overflow:hidden}
 .badge{margin-left:auto;background:var(--brand-primary);color:#06221d;border-radius:20px;font-size:11px;font-weight:800;padding:1px 8px}
 .sidefoot{margin-top:auto;display:grid;gap:8px;border-top:1px solid #243649;padding-top:14px}
 .sidebtn{display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--nav-ink);padding:8px 12px;border-radius:9px;text-align:left;font-size:13.5px}
@@ -400,12 +403,13 @@ td.pnl{font-weight:700}
 <div class="app">
 <aside class="sidebar" aria-label="Main navigation">
  <div class="brand" aria-label="TradeLab — Plan, Trade, Grow"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M7 34 17 24l7 7 17-18M31 13h10v10" stroke="#F8FAFC" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="brand-copy"><b>Trade<span>Lab</span></b><small>PLAN / TRADE / GROW</small></span></div>
+ <svg class="nav-defs" aria-hidden="true" focusable="false"><defs><linearGradient id="tradelab-nav-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00E5B8"/><stop offset="1" stop-color="#008B94"/></linearGradient></defs></svg>
  <nav class="navlist">
-  <a class="nav" href="#/overview" data-page="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
-  <a class="nav" href="#/journal" data-page="journal"><svg viewBox="0 0 24 24"><path d="M5 3h13a2 2 0 0 1 2 2v16H7a3 3 0 0 1-3-3V4a1 1 0 0 1 1-1Z"/><path d="M4 18a3 3 0 0 1 3-3h13M8 7h8M8 11h6"/></svg>Journal<span class="badge" id="navBadge" hidden></span></a>
-  <a class="nav" href="#/replay" data-page="replay"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/><path d="M3 5v14"/></svg>Replay</a>
-  <a class="nav" href="#/backtest" data-page="backtest"><svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-9M3 21h18"/></svg>Practice</a>
-  <a class="nav" href="#/calculator" data-page="calculator"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M8 19h8"/></svg>Calculator</a>
+  <a class="nav" href="#/overview" data-page="overview"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7.5" height="7.5" rx="2.4"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2.4"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2.4"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2.4"/></svg>Overview</a>
+  <a class="nav" href="#/journal" data-page="journal"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3.5h9.2L19.5 8v11.8a1.7 1.7 0 0 1-1.7 1.7H6a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"/><path d="M15 3.8V8h4.2M8 11h8M8 14.5h6"/><path d="M13.6 21.3c.4-2.2 1.6-3.3 3.8-3.7"/></svg>Journal<span class="badge" id="navBadge" hidden></span></a>
+  <a class="nav" href="#/replay" data-page="replay"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.2 5v14"/><path class="nav-icon-fill" d="M10 6.2c0-1.2 1.3-1.9 2.3-1.2l8.1 5.6a1.7 1.7 0 0 1 0 2.8l-8.1 5.6c-1 .7-2.3 0-2.3-1.2V6.2Z"/></svg>Replay</a>
+  <a class="nav" href="#/backtest" data-page="backtest"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 19h18M4 16.5l5.2-5.2 3.6 3.5 7-8"/><path d="M15.2 6.8h4.6v4.6"/></svg>Practice</a>
+  <a class="nav" href="#/calculator" data-page="calculator"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="2.5" width="17" height="19" rx="3"/><rect x="7" y="7" width="2.5" height="1.7" rx=".8"/><rect x="14.5" y="7" width="2.5" height="1.7" rx=".8"/><rect x="7" y="11.4" width="2.5" height="1.7" rx=".8"/><rect x="14.5" y="11.4" width="2.5" height="1.7" rx=".8"/><rect x="7" y="15.8" width="2.5" height="1.7" rx=".8"/><rect x="14.5" y="15.8" width="2.5" height="1.7" rx=".8"/></svg>Calculator</a>
  </nav>
  <div class="sidefoot">
   <button class="account-btn" id="accountBtn" type="button"><span class="account-dot" id="accountDot"></span><span id="accountLabel">Account · browser only</span></button>
