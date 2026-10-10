@@ -294,6 +294,46 @@ td.pnl{font-weight:700}
 @media(max-width:1180px){.portfolio-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.portfolio-card .v{font-size:18px}.portfolio-support-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.portfolio-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.portfolio-card .v{font-size:18px}.portfolio-card .v-sm{font-size:16px}.portfolio-support-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.portfolio-table{font-size:12px}.portfolio-table th,.portfolio-table td{padding:8px 5px}.portfolio-start{width:100%;justify-content:space-between}.overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:720px){.account-flow-form{grid-template-columns:repeat(2,minmax(0,1fr))}.account-flow-note{grid-column:1/-1}.account-flow-add{grid-column:1/-1}}
+#overview .portfolio-snapshot{padding:clamp(16px,2vw,24px);border-radius:18px;box-shadow:0 2px 4px rgba(15,35,50,.035),0 14px 36px rgba(15,35,50,.04)}
+#overview .portfolio-head{align-items:center;margin-bottom:18px}
+#overview .portfolio-head h2{font-size:18px;letter-spacing:-.025em}
+#overview .portfolio-head p{font-size:12px}
+#overview .portfolio-start{gap:10px}
+#overview .portfolio-start input{border-radius:10px;transition:border-color .15s,box-shadow .15s}
+#overview .portfolio-start input:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 14%,transparent)}
+#overview .portfolio-cards{gap:11px;margin-bottom:8px}
+#overview .portfolio-card{min-height:88px;padding:13px 14px;border-color:transparent;border-radius:13px;transition:transform .15s ease,border-color .15s ease}
+#overview .portfolio-card:hover{transform:translateY(-1px);border-color:var(--line)}
+#overview .portfolio-card .l{font-size:11px;letter-spacing:.015em}
+#overview .portfolio-card .v{margin-top:5px;font-size:21px;letter-spacing:-.035em}
+#overview .portfolio-day-pair{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0 2px;border-top:1px solid color-mix(in srgb,var(--line) 75%,transparent)}
+#overview .portfolio-day-pair .day-label{font-size:10px}
+#overview .portfolio-support{border-top:1px solid var(--line);padding-top:16px;margin-top:15px}
+#overview .portfolio-support-title{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+#overview .portfolio-support-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#overview .portfolio-support-item{padding:11px 13px;border:1px solid color-mix(in srgb,var(--line) 65%,transparent);border-radius:11px}
+#overview .portfolio-support-item span{font-size:10px;letter-spacing:.02em}
+#overview .portfolio-support-item strong{margin-top:3px;font-size:13px}
+#overview .portfolio-foot{margin-top:12px;line-height:1.5}
+#overview .kpi{border-radius:14px;box-shadow:0 2px 8px rgba(15,35,50,.025);padding:16px 17px}
+#overview .grid.cols2{gap:14px}
+.account-activity{padding:0;margin-top:8px;border:0;border-top:1px solid var(--line)}
+.account-activity>summary{list-style:none;display:flex;align-items:center;gap:14px;padding:10px 4px;cursor:pointer;user-select:none}
+.account-activity>summary::-webkit-details-marker{display:none}
+.account-activity-label{margin-right:auto;min-width:0}
+.account-activity-label strong,.account-activity-label small,.account-activity-net small,.account-activity-net strong{display:block}
+.account-activity-label strong{font-size:11.5px;font-weight:700;color:var(--ink2)}
+.account-activity-label small,.account-activity-net small{font-size:10px;color:var(--muted)}
+.account-activity-net{text-align:right;line-height:1.25}
+.account-activity-net strong{font-size:11px;font-weight:650}
+.account-activity-chevron{width:23px;height:23px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;color:var(--muted);font-size:15px;transition:transform .15s ease,background .15s ease}
+.account-activity[open]>summary .account-activity-chevron{transform:rotate(180deg);background:var(--panel2)}
+.account-activity>summary:hover .account-activity-label strong{color:var(--teal)}
+.account-activity-content{padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.account-activity-content .account-flow-list{max-height:160px}
+.account-activity-content .account-flow-form input,.account-activity-content .account-flow-form select{background:var(--panel);border-color:var(--line)}
+@media(max-width:720px){#overview .portfolio-support-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#overview .portfolio-head{align-items:flex-start}#overview .portfolio-start{margin-top:4px}}
+@media(prefers-reduced-motion:reduce){#overview .portfolio-card,.account-activity-chevron{transition:none!important}#overview .portfolio-card:hover{transform:none}}
 @media(max-width:820px){.paths{grid-template-columns:1fr}.path{min-height:0}}
 @media(max-width:900px){.hide-md{display:none}}
 @media(max-width:720px){
@@ -2074,10 +2114,11 @@ function miniTable(list){
 function accountCashflowTotals(){const rows=state.prefs.accountCashflows||[],deposits=rows.filter(x=>x.type==='deposit').reduce((a,x)=>a+Number(x.amount||0),0),withdrawals=rows.filter(x=>x.type==='withdrawal').reduce((a,x)=>a+Number(x.amount||0),0);return{deposits,withdrawals,net:deposits-withdrawals}}
 function accountActivityHTML(){
  const rows=[...(state.prefs.accountCashflows||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
- return`<section class="account-activity" aria-label="Account deposits and withdrawals"><div class="account-activity-head"><div><h3>Deposits &amp; withdrawals</h3><p>Transfers update estimated account value; they stay separate from trading P&amp;L.</p></div></div>
+ const flows=accountCashflowTotals();
+ return`<details class="account-activity" id="accountActivityDetails"><summary><span class="account-activity-label"><strong>Account activity</strong><small>Manage deposits and withdrawals</small></span><span class="account-activity-net"><small>Net transfers</small><strong class="${tone(flows.net)}">${esc(pnl(flows.net))}</strong></span><span class="account-activity-chevron" aria-hidden="true">⌄</span></summary><div class="account-activity-content">
   <div class="account-flow-form"><label>Type<select id="accountFlowType"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option></select></label><label>Amount<input id="accountFlowAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></label><label>Date<input id="accountFlowDate" type="date" value="${dayKey(Date.now())}" max="${dayKey(Date.now())}"></label><label class="account-flow-note">Note <input id="accountFlowNote" type="text" maxlength="100" placeholder="Optional"></label><button class="btn sm primary account-flow-add" type="button" data-act="account-flow-add">Add</button></div>
-  ${rows.length?`<div class="account-flow-list" aria-label="Saved account transfers">${rows.map(x=>`<div class="account-flow-row"><div><strong>${x.type==='deposit'?'Deposit':'Withdrawal'}</strong><span>${esc(new Date(x.date+'T12:00:00').toLocaleDateString())}${x.note?' · '+esc(x.note):''}</span></div><strong class="${x.type==='deposit'?'pos':'neg'}">${x.type==='deposit'?'+':'−'}${esc(money(x.amount))}</strong><button class="iconbtn account-flow-remove" type="button" data-act="account-flow-delete" data-arg="${esc(x.id)}" aria-label="Remove ${x.type} of ${esc(money(x.amount))}">×</button></div>`).join('')}</div>`:`<p class="account-flow-empty">No deposits or withdrawals added yet.</p>`}
- </section>`
+  ${rows.length?`<div class="account-flow-list" aria-label="Saved account transfers">${rows.map(x=>`<div class="account-flow-row"><div><strong>${x.type==='deposit'?'Deposit':'Withdrawal'}</strong><span>${esc(new Date(x.date+'T12:00:00').toLocaleDateString())}${x.note?' · '+esc(x.note):''}</span></div><strong class="${x.type==='deposit'?'pos':'neg'}">${x.type==='deposit'?'+':'−'}${esc(money(x.amount))}</strong><button class="iconbtn account-flow-remove" type="button" data-act="account-flow-delete" data-arg="${esc(x.id)}" aria-label="Remove ${x.type} of ${esc(money(x.amount))}">×</button></div>`).join('')}</div>`:`<p class="account-flow-empty">No account transfers added yet.</p>`}
+ </div></details>`
 }
 function welcomeHTML(){
  return`<div class="hero"><h2>Learn from every trade.</h2><p>TradeLab turns your trade history into a journal you can actually learn from — then lets you replay trades and practice on past markets. Pick a place to start:</p>
@@ -2732,8 +2773,8 @@ const ACTS={
  'clear-filters':()=>{Object.assign(jf,{q:'',result:'all',side:'all',source:'all',day:null});renderJournal()},
  more:()=>{jLimit+=50;renderJournalList()},
  'review-next':()=>{const l=journalList().find(t=>!reviewed(t))||scoped().find(t=>!reviewed(t));l?openDetail(l.id):toast('Everything is reviewed.')},
- 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note});await saveCore();renderOverview();toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
- 'account-flow-delete':async a=>{const rows=state.prefs.accountCashflows||[];if(!rows.some(x=>x.id===a))return;state.prefs.accountCashflows=rows.filter(x=>x.id!==a);await saveCore();renderOverview();toast('Account transfer removed.')},
+ 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note});await saveCore();renderOverview();$('#accountActivityDetails').open=true;toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
+ 'account-flow-delete':async a=>{const rows=state.prefs.accountCashflows||[];if(!rows.some(x=>x.id===a))return;state.prefs.accountCashflows=rows.filter(x=>x.id!==a);await saveCore();renderOverview();$('#accountActivityDetails').open=true;toast('Account transfer removed.')},
  'del-selected':async()=>{const ids=[...sel];if(ids.length&&await confirmBox({title:`Delete ${plural(ids.length,'trade')}?`,body:'You can undo right after.',ok:'Delete',danger:true}))deleteTrades(ids)},
  'del-all-trades':async()=>{const ids=state.trades.map(t=>t.id);if(!ids.length)return;if(await confirmBox({title:'Delete all trades?',body:`This removes all ${plural(ids.length,'trade')} and their notes from the journal. You can undo right after.`,ok:'Delete all trades',danger:true}))deleteTrades(ids)},
  'clear-sel':()=>{sel.clear();renderJournalList()},
