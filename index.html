@@ -2106,14 +2106,15 @@ function portfolioSnapshot(base){
  const n=closed.length,total=closed.reduce((a,t)=>a+t.pnl,0),fees=closed.reduce((a,t)=>a+(Number(t.fees)||0),0),start=Math.max(0,Number(state.prefs.startingBalance)||0),flows=accountCashflowTotals(),current=start+total+flows.net;
  const dayMap=new Map,bySymbol=new Map;
  for(const t of closed){const d=dayKey(t.exit),de=dayMap.get(d)||{pnl:0,count:0};de.pnl+=t.pnl;de.count++;dayMap.set(d,de);const key=t.symbol||'Unknown',se=bySymbol.get(key)||{pnl:0,count:0};se.pnl+=t.pnl;se.count++;bySymbol.set(key,se)}
- const activeDays=dayMap.size,bestDay=[...dayMap].sort((a,b)=>b[1].pnl-a[1].pnl)[0],worstDay=[...dayMap].sort((a,b)=>a[1].pnl-b[1].pnl)[0],bestTicker=[...bySymbol].sort((a,b)=>b[1].pnl-a[1].pnl)[0];
+ const dayEntries=[...dayMap].filter(row=>Array.isArray(row)&&row.length>1&&row[1]&&Number.isFinite(Number(row[1].pnl))),symbolEntries=[...bySymbol].filter(row=>Array.isArray(row)&&row.length>1&&row[1]&&Number.isFinite(Number(row[1].pnl)));
+ const activeDays=dayEntries.length,bestDay=[...dayEntries].sort((a,b)=>Number(b[1].pnl)-Number(a[1].pnl))[0]||null,worstDay=[...dayEntries].sort((a,b)=>Number(a[1].pnl)-Number(b[1].pnl))[0]||null,bestTicker=[...symbolEntries].sort((a,b)=>Number(b[1].pnl)-Number(a[1].pnl))[0]||null;
  const spanWeeks=n?Math.max(1,Math.ceil((ts(closed[n-1].exit)-ts(closed[0].exit))/ (7*DAY))):0;
  const avgDay=activeDays?total/activeDays:0,avgWeek=spanWeeks?total/spanWeeks:0,avgTrade=n?total/n:0;
  const returns=closed.map(returnPct).filter(v=>v!=null),avgReturn=returns.length?returns.reduce((a,v)=>a+v,0)/returns.length:null;
  const fmtPct=v=>v==null?'—':`${v>0?'+':''}${v.toFixed(2)}%`;
  const accountPct=v=>start?fmtPct(v/start*100):'Add starting balance';
  const topCard=(label,value,sub,cls='')=>`<div class="portfolio-card"><div class="l">${label}</div><div class="v ${cls}">${value}</div><div class="s">${sub}</div></div>`;
- const dayLine=(label,entry)=>`<div class="portfolio-day-pair"><span class="day-label">${label} · ${entry?esc(dDay(entry[0]+'T12:00')):'—'}</span><strong class="${entry?tone(entry[1].pnl):''}">${entry?esc(pnl(entry[1].pnl)):'—'} <span class="muted">(${start?fmtPct(entry[1].pnl/start*100):'—'})</span></strong></div>`;
+ const dayLine=(label,entry)=>{const date=Array.isArray(entry)&&entry.length>1?entry[0]:null,stats=Array.isArray(entry)&&entry.length>1?entry[1]:null,value=Number(stats?.pnl),valid=!!date&&Number.isFinite(value);return`<div class="portfolio-day-pair"><span class="day-label">${label} · ${valid?esc(dDay(date+'T12:00')):'—'}</span><strong class="${valid?tone(value):''}">${valid?esc(pnl(value)):'—'} <span class="muted">(${valid&&start?fmtPct(value/start*100):'—'})</span></strong></div>`};
  return`<section class="panel portfolio-snapshot" aria-label="Portfolio snapshot">
   <div class="portfolio-head"><div><h2>Portfolio snapshot</h2><p>All time · ${plural(n,'closed position')}</p></div>
    <label class="portfolio-start">Starting account size <input id="portfolioStartBalance" type="number" min="0" step="0.01" inputmode="decimal" value="${start||''}" placeholder="e.g. 10000" aria-label="Starting account size"></label></div>
@@ -2685,7 +2686,8 @@ async function activateCloudUser(user){
    else{state=blank();state.prefs.theme=old.prefs.theme}
    cloudReady=true;await queueCloudSave();
   }
-  cloudReady=true;syncPhase='refreshing the TradeLab screen';renderAccount();applyTheme();refresh();
+  cloudReady=true;renderAccount();applyTheme();syncPhase='refreshing the TradeLab screen';
+  try{refresh()}catch(renderError){console.error('Account data loaded, but TradeLab could not render the current screen',renderError);const message=`Your account journal loaded, but the screen couldn’t display it: ${renderError?.message||'unknown rendering error'}`;$('#signedMessage').textContent=message;toast(message,{ms:20000})}
  }catch(e){console.error('Account sync failed during '+syncPhase,e);cloudReady=false;const message=accountSyncError(e,syncPhase);$('#accountMessage').textContent=message;$('#signedMessage').textContent=message;toast(message,{ms:20000})}
  finally{cloudActivation=''}
 }
