@@ -90,6 +90,22 @@ h3{font-size:14px;font-weight:700}
 .portfolio-support-item{min-width:0;background:var(--panel2);border-radius:9px;padding:9px 11px}
 .portfolio-support-item span{display:block;color:var(--muted);font-size:11px}
 .portfolio-support-item strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.portfolio-support-item small{display:block;margin-top:2px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-activity{padding:14px 0 2px;border-top:1px solid var(--line)}
+.account-activity-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.account-activity-head h3{font-size:13px;font-weight:750}
+.account-activity-head p{margin-top:2px;color:var(--muted);font-size:11.5px}
+.account-flow-form{display:grid;grid-template-columns:minmax(110px,.7fr) minmax(120px,.8fr) minmax(135px,.9fr) minmax(150px,1fr) auto;gap:8px;align-items:end}
+.account-flow-form label{display:grid;gap:4px;color:var(--muted);font-size:11px;font-weight:650}
+.account-flow-form input,.account-flow-form select{width:100%;min-height:36px;padding:6px 9px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);color:var(--ink);font-size:13px}
+.account-flow-form .account-flow-add{min-height:36px}
+.account-flow-list{max-height:190px;overflow:auto;margin-top:10px;border-top:1px solid var(--line)}
+.account-flow-row{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;gap:12px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line)}
+.account-flow-row>div{min-width:0}.account-flow-row>div strong,.account-flow-row>div span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.account-flow-row>div strong{font-size:12px}.account-flow-row>div span{color:var(--muted);font-size:10.5px}
+.account-flow-row>strong{font-size:12px;white-space:nowrap}
+.account-flow-remove{width:28px;height:28px;min-width:28px;font-size:17px;color:var(--muted)}
+.account-flow-empty{padding:8px 0 2px;color:var(--muted);font-size:11.5px}
 .portfolio-table{width:100%;border-collapse:collapse;font-size:13px}
 .portfolio-table th,.portfolio-table td{padding:9px 10px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
 .portfolio-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.045em;font-weight:700}
@@ -277,6 +293,7 @@ td.pnl{font-weight:700}
 @media(max-width:1180px){.overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:1180px){.portfolio-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.portfolio-card .v{font-size:18px}.portfolio-support-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.portfolio-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.portfolio-card .v{font-size:18px}.portfolio-card .v-sm{font-size:16px}.portfolio-support-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.portfolio-table{font-size:12px}.portfolio-table th,.portfolio-table td{padding:8px 5px}.portfolio-start{width:100%;justify-content:space-between}.overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:720px){.account-flow-form{grid-template-columns:repeat(2,minmax(0,1fr))}.account-flow-note{grid-column:1/-1}.account-flow-add{grid-column:1/-1}}
 @media(max-width:820px){.paths{grid-template-columns:1fr}.path{min-height:0}}
 @media(max-width:900px){.hide-md{display:none}}
 @media(max-width:720px){
@@ -1665,7 +1682,7 @@ html[data-theme="dark"] #tradelab-calc-page{--blue:#73b5f4;--purple:#b39ae9}
 #tradelab-calc-page .tlc-actual-heading span,#tradelab-calc-page .tlc-actual-note{color:var(--muted);font-size:.76rem}
 #tradelab-calc-page .tlc-actual-heading a{color:var(--teal);font-size:.8rem;font-weight:650;text-decoration:none}
 #tradelab-calc-page .tlc-actual-heading a:hover{text-decoration:underline}
-#tradelab-calc-page .tlc-actual-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#tradelab-calc-page .tlc-actual-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
 #tradelab-calc-page .tlc-actual-metrics>div{min-width:0;padding:10px 12px;border-radius:10px;background:var(--panel2)}
 #tradelab-calc-page .tlc-actual-metrics span,#tradelab-calc-page .tlc-actual-metrics strong{display:block;overflow:hidden;text-overflow:ellipsis}
 #tradelab-calc-page .tlc-actual-metrics span{color:var(--muted);font-size:.72rem}
@@ -1707,12 +1724,12 @@ function niceTicks(lo,hi,n=4){if(lo===hi){lo-=1;hi+=1}const s0=(hi-lo)/n,mag=10*
 function priceFmt(p){const a=Math.abs(p);const d=a>=1000?2:a>=10?2:a>=1?3:5;return new Intl.NumberFormat('en-US',{minimumFractionDigits:Math.min(d,2),maximumFractionDigits:d}).format(p)}
 
 /* ===================== state & storage ===================== */
-const DEFAULT_PREFS={theme:'auto',scope:'auto',range:'all',lastBackup:0,snoozeBackup:0,btQty:1,btMult:1,sort:{key:'exit',dir:-1},calMonth:null,breakBy:'symbol',startingBalance:0};
-const blank=()=>({version:2,trades:[],drafts:[],candles:[],bt:{symbol:'',index:0,position:null},prefs:{...DEFAULT_PREFS,sort:{...DEFAULT_PREFS.sort}}});
+const DEFAULT_PREFS={theme:'auto',scope:'auto',range:'all',lastBackup:0,snoozeBackup:0,btQty:1,btMult:1,sort:{key:'exit',dir:-1},calMonth:null,breakBy:'symbol',startingBalance:0,accountCashflows:[]};
+const blank=()=>({version:2,trades:[],drafts:[],candles:[],bt:{symbol:'',index:0,position:null},prefs:{...DEFAULT_PREFS,accountCashflows:[],sort:{...DEFAULT_PREFS.sort}}});
 let state=blank(),db=null,storageOk=true,writeQ=Promise.resolve();
 let cloudClient=null,cloudUser=null,cloudReady=false,cloudSaveTimer=null,cloudSaveWaiters=[],cloudActivation='';
 function normTrade(t){t.id=t.id||uid();t.tags=Array.isArray(t.tags)?t.tags:[];t.notes=t.notes||'';t.strategy=t.strategy||'';t.grade=t.grade||'';t.source=t.source||'Imported';t.fees=Number(t.fees)||0;t.multiplier=Number(t.multiplier)||1;t.side=t.side==='Short'?'Short':'Long';t.qty=Number(t.qty)||0;return t}
-function adopt(src){const b=blank();state.trades=(src.trades||[]).filter(t=>t&&typeof t.symbol==='string'&&t.entry).map(normTrade);state.drafts=Array.isArray(src.drafts)?src.drafts.filter(d=>d&&typeof d.id==='string'):[];state.bt={...b.bt,...(src.bt||{})};state.prefs={...b.prefs,...(src.prefs||{}),sort:{...b.prefs.sort,...((src.prefs||{}).sort||{})}}}
+function adopt(src){const b=blank();state.trades=(src.trades||[]).filter(t=>t&&typeof t.symbol==='string'&&t.entry).map(normTrade);state.drafts=Array.isArray(src.drafts)?src.drafts.filter(d=>d&&typeof d.id==='string'):[];state.bt={...b.bt,...(src.bt||{})};state.prefs={...b.prefs,...(src.prefs||{}),sort:{...b.prefs.sort,...((src.prefs||{}).sort||{})}};state.prefs.accountCashflows=(Array.isArray(state.prefs.accountCashflows)?state.prefs.accountCashflows:[]).filter(x=>x&&['deposit','withdrawal'].includes(x.type)&&Number(x.amount)>0&&x.date).map(x=>({id:String(x.id||uid()),type:x.type,amount:Number(x.amount),date:String(x.date),note:String(x.note||'').slice(0,100)}))}
 function normCandles(a){for(const c of a)c.t=ts(c.time);return a}
 const idbReq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 async function initStore(){
@@ -2054,6 +2071,14 @@ function miniTable(list){
 }
 
 /* ===================== overview ===================== */
+function accountCashflowTotals(){const rows=state.prefs.accountCashflows||[],deposits=rows.filter(x=>x.type==='deposit').reduce((a,x)=>a+Number(x.amount||0),0),withdrawals=rows.filter(x=>x.type==='withdrawal').reduce((a,x)=>a+Number(x.amount||0),0);return{deposits,withdrawals,net:deposits-withdrawals}}
+function accountActivityHTML(){
+ const rows=[...(state.prefs.accountCashflows||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
+ return`<section class="account-activity" aria-label="Account deposits and withdrawals"><div class="account-activity-head"><div><h3>Deposits &amp; withdrawals</h3><p>Transfers update estimated account value; they stay separate from trading P&amp;L.</p></div></div>
+  <div class="account-flow-form"><label>Type<select id="accountFlowType"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option></select></label><label>Amount<input id="accountFlowAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></label><label>Date<input id="accountFlowDate" type="date" value="${dayKey(Date.now())}" max="${dayKey(Date.now())}"></label><label class="account-flow-note">Note <input id="accountFlowNote" type="text" maxlength="100" placeholder="Optional"></label><button class="btn sm primary account-flow-add" type="button" data-act="account-flow-add">Add</button></div>
+  ${rows.length?`<div class="account-flow-list" aria-label="Saved account transfers">${rows.map(x=>`<div class="account-flow-row"><div><strong>${x.type==='deposit'?'Deposit':'Withdrawal'}</strong><span>${esc(new Date(x.date+'T12:00:00').toLocaleDateString())}${x.note?' · '+esc(x.note):''}</span></div><strong class="${x.type==='deposit'?'pos':'neg'}">${x.type==='deposit'?'+':'−'}${esc(money(x.amount))}</strong><button class="iconbtn account-flow-remove" type="button" data-act="account-flow-delete" data-arg="${esc(x.id)}" aria-label="Remove ${x.type} of ${esc(money(x.amount))}">×</button></div>`).join('')}</div>`:`<p class="account-flow-empty">No deposits or withdrawals added yet.</p>`}
+ </section>`
+}
 function welcomeHTML(){
  return`<div class="hero"><h2>Learn from every trade.</h2><p>TradeLab turns your trade history into a journal you can actually learn from — then lets you replay trades and practice on past markets. Pick a place to start:</p>
  <div class="paths">
@@ -2064,8 +2089,8 @@ function welcomeHTML(){
  <div class="steps"><span><b>Journal</b> your trades</span>·<span><b>Replay</b> them candle by candle</span>·<span><b>Practice</b> on past markets</span>·<span>${cloudUser?'Private account sync':'Private — this browser only'}</span></div></div>`
 }
 function portfolioSnapshot(base){
- const closed=base.filter(t=>t.exit&&Number.isFinite(t.pnl)).sort((a,b)=>ts(a.exit)-ts(b.exit));
- const n=closed.length,total=closed.reduce((a,t)=>a+t.pnl,0),fees=closed.reduce((a,t)=>a+(Number(t.fees)||0),0),start=Math.max(0,Number(state.prefs.startingBalance)||0),current=start+total;
+ const closed=state.trades.filter(t=>isLive(t)&&t.exit&&Number.isFinite(t.pnl)).sort((a,b)=>ts(a.exit)-ts(b.exit));
+ const n=closed.length,total=closed.reduce((a,t)=>a+t.pnl,0),fees=closed.reduce((a,t)=>a+(Number(t.fees)||0),0),start=Math.max(0,Number(state.prefs.startingBalance)||0),flows=accountCashflowTotals(),current=start+total+flows.net;
  const dayMap=new Map,bySymbol=new Map;
  for(const t of closed){const d=dayKey(t.exit),de=dayMap.get(d)||{pnl:0,count:0};de.pnl+=t.pnl;de.count++;dayMap.set(d,de);const key=t.symbol||'Unknown',se=bySymbol.get(key)||{pnl:0,count:0};se.pnl+=t.pnl;se.count++;bySymbol.set(key,se)}
  const activeDays=dayMap.size,bestDay=[...dayMap].sort((a,b)=>b[1].pnl-a[1].pnl)[0],worstDay=[...dayMap].sort((a,b)=>a[1].pnl-b[1].pnl)[0],bestTicker=[...bySymbol].sort((a,b)=>b[1].pnl-a[1].pnl)[0];
@@ -2086,16 +2111,18 @@ function portfolioSnapshot(base){
    ${topCard('Most profitable ticker',bestTicker?esc(bestTicker[0]):'—',bestTicker?`${esc(pnl(bestTicker[1].pnl))} · ${plural(bestTicker[1].count,'position')}`:'No closed trades yet',bestTicker?tone(bestTicker[1].pnl):'')}
    <div class="portfolio-card"><div class="l">Most / least profitable day</div>${dayLine('Best',bestDay)}${dayLine('Least',worstDay)}</div>
   </div>
+  ${accountActivityHTML()}
   <div class="portfolio-support"><h3 class="portfolio-support-title">More portfolio stats</h3><div class="portfolio-support-grid">
    <div class="portfolio-support-item"><span>Starting balance</span><strong>${start?esc(money(start)):'Not set'}</strong></div>
    <div class="portfolio-support-item"><span>Current account value</span><strong>${start?esc(money(current)):'Add starting balance'}</strong></div>
+   <div class="portfolio-support-item"><span>Net deposits / withdrawals</span><strong class="${tone(flows.net)}">${esc(pnl(flows.net))}</strong><small>Deposits ${esc(money(flows.deposits))} · Withdrawals ${esc(money(flows.withdrawals))}</small></div>
    <div class="portfolio-support-item"><span>Account growth</span><strong class="${tone(total)}">${start?fmtPct(total/start*100):'—'} · ${esc(pnl(total))}</strong></div>
    <div class="portfolio-support-item"><span>Average per position</span><strong class="${tone(avgTrade)}">${n?esc(pnl(avgTrade)):'—'} · ${fmtPct(avgReturn)}</strong></div>
    <div class="portfolio-support-item"><span>Average per calendar week</span><strong class="${tone(avgWeek)}">${spanWeeks?esc(pnl(avgWeek)):'—'} · ${spanWeeks?accountPct(avgWeek):'—'}</strong></div>
    <div class="portfolio-support-item"><span>Closed positions</span><strong>${esc(num(n))}</strong></div>
    <div class="portfolio-support-item"><span>Fees paid</span><strong>${esc(money(fees))}</strong></div>
    <div class="portfolio-support-item"><span>Average trade duration</span><strong>${n?esc(dur(closed.reduce((a,t)=>a+Math.max(0,ts(t.exit)-ts(t.entry)),0)/n)):'—'}</strong></div>
-  </div><div class="portfolio-foot">Percentages use starting account size. Daily averages include dates with closed positions; weekly averages use elapsed calendar weeks between first and latest close. Starting balance is saved ${cloudUser?'to your account':'in this browser'}.</div></div>
+  </div><div class="portfolio-foot">Trading P&amp;L and account transfers are tracked separately. Estimated current value = starting balance + closed-trade P&amp;L + net transfers (deposits minus withdrawals). Percentages use starting account size. Starting balance and transfers are saved ${cloudUser?'to your account':'in this browser'}.</div></div>
  </section>`
 }
 function renderOverview(){
@@ -2665,7 +2692,7 @@ function renderNav(){
  const drafts=$('#draftBadge');drafts.hidden=!state.drafts.length;drafts.textContent=state.drafts.length>99?'99+':state.drafts.length;
  $$('.nav').forEach(a=>{a.dataset.page===currentPage?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})
 }
-function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length;window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance:Math.max(0,Number(state.prefs.startingBalance)||0),tradeCount:closed.length,totalPnl,wins}}))},drafts:renderDrafts};r[p]()}
+function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length,flows=accountCashflowTotals();window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance:Math.max(0,Number(state.prefs.startingBalance)||0),tradeCount:closed.length,totalPnl,wins,netTransfers:flows.net,deposits:flows.deposits,withdrawals:flows.withdrawals}}))},drafts:renderDrafts};r[p]()}
 function refresh(){renderNav();renderPage(currentPage)}
 function show(p){
  stopReplay();stopBT();currentPage=p;
@@ -2703,6 +2730,8 @@ const ACTS={
  'clear-filters':()=>{Object.assign(jf,{q:'',result:'all',side:'all',source:'all',day:null});renderJournal()},
  more:()=>{jLimit+=50;renderJournalList()},
  'review-next':()=>{const l=journalList().find(t=>!reviewed(t))||scoped().find(t=>!reviewed(t));l?openDetail(l.id):toast('Everything is reviewed.')},
+ 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note});await saveCore();renderOverview();toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
+ 'account-flow-delete':async a=>{const rows=state.prefs.accountCashflows||[];if(!rows.some(x=>x.id===a))return;state.prefs.accountCashflows=rows.filter(x=>x.id!==a);await saveCore();renderOverview();toast('Account transfer removed.')},
  'del-selected':async()=>{const ids=[...sel];if(ids.length&&await confirmBox({title:`Delete ${plural(ids.length,'trade')}?`,body:'You can undo right after.',ok:'Delete',danger:true}))deleteTrades(ids)},
  'del-all-trades':async()=>{const ids=state.trades.map(t=>t.id);if(!ids.length)return;if(await confirmBox({title:'Delete all trades?',body:`This removes all ${plural(ids.length,'trade')} and their notes from the journal. You can undo right after.`,ok:'Delete all trades',danger:true}))deleteTrades(ids)},
  'clear-sel':()=>{sel.clear();renderJournalList()},
@@ -2822,7 +2851,7 @@ start();
 
 const calcRoot=document.getElementById('tradelab-calc-page');
 const cEl=id=>document.getElementById('tlc-'+id);
-let _actualProgress={startingBalance:0,tradeCount:0,totalPnl:0,wins:0};
+let _actualProgress={startingBalance:0,tradeCount:0,totalPnl:0,wins:0,netTransfers:0,deposits:0,withdrawals:0};
 const _scenarios=[];
 let _scColorIdx=0;
 const _scColors=['var(--gold)','var(--green)','var(--blue)','var(--purple)'];
@@ -3495,9 +3524,9 @@ function renderScenarios() {
   const actualBox = cEl('actualProgress');
   if (actualBox) {
     const a = _actualProgress, hasBalance = Number(a.startingBalance) > 0;
-    const current = Number(a.startingBalance || 0) + Number(a.totalPnl || 0);
+    const current = Number(a.startingBalance || 0) + Number(a.totalPnl || 0) + Number(a.netTransfers || 0);
     const actualReturn = hasBalance ? Number(a.totalPnl || 0) / Number(a.startingBalance) * 100 : null;
-    actualBox.innerHTML = `<div class="tlc-actual-heading"><div><strong>Actual journal progress</strong><span>Closed imported and manual trades</span></div><a href="#/overview">Starting balance</a></div><div class="tlc-actual-metrics"><div><span>Net P&amp;L</span><strong class="${Number(a.totalPnl || 0) >= 0 ? 'pos' : 'neg'}">${fmtCurrency(Number(a.totalPnl || 0))}</strong></div><div><span>Closed positions</span><strong>${Number(a.tradeCount || 0).toLocaleString()}</strong></div><div><span>Win rate</span><strong>${Number(a.tradeCount) ? (100 * Number(a.wins || 0) / Number(a.tradeCount)).toFixed(1) + '%' : '—'}</strong></div><div><span>${hasBalance ? 'Estimated account value' : 'Account growth'}</span><strong>${hasBalance ? fmtCurrency(current) : actualReturn == null ? 'Add a starting balance' : fmtPct(actualReturn)}</strong></div></div><p class="tlc-actual-note">${hasBalance ? 'Estimate = starting account size plus closed-trade net P&amp;L. Open positions are not included.' : 'Add your starting account size on Overview to compare account value and growth with each projection.'}</p></div>`;
+    actualBox.innerHTML = `<div class="tlc-actual-heading"><div><strong>Actual journal progress</strong><span>Closed imported and manual trades</span></div><a href="#/overview">Account activity</a></div><div class="tlc-actual-metrics"><div><span>Net P&amp;L</span><strong class="${Number(a.totalPnl || 0) >= 0 ? 'pos' : 'neg'}">${fmtCurrency(Number(a.totalPnl || 0))}</strong></div><div><span>Net deposits / withdrawals</span><strong class="${Number(a.netTransfers || 0) >= 0 ? 'pos' : 'neg'}">${fmtCurrency(Number(a.netTransfers || 0))}</strong></div><div><span>Closed positions</span><strong>${Number(a.tradeCount || 0).toLocaleString()}</strong></div><div><span>Win rate</span><strong>${Number(a.tradeCount) ? (100 * Number(a.wins || 0) / Number(a.tradeCount)).toFixed(1) + '%' : '—'}</strong></div><div><span>${hasBalance ? 'Estimated account value' : 'Account growth'}</span><strong>${hasBalance ? fmtCurrency(current) : actualReturn == null ? 'Add a starting balance' : fmtPct(actualReturn)}</strong></div></div><p class="tlc-actual-note">${hasBalance ? 'Estimate = starting balance + closed-trade P&amp;L + net transfers (deposits minus withdrawals). Open positions are not included.' : 'Add your starting account size on Overview to compare account value and growth with each projection.'}</p></div>`;
   }
   if (!_scenarios.length) {
     container.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
@@ -3509,7 +3538,7 @@ function renderScenarios() {
   container.innerHTML = _scenarios.map((sc, idx) => {
     const pos = sc.res.totalProfitLoss >= 0;
     const hasBalance = Number(_actualProgress.startingBalance) > 0;
-    const actualBalance = Number(_actualProgress.startingBalance || 0) + Number(_actualProgress.totalPnl || 0);
+    const actualBalance = Number(_actualProgress.startingBalance || 0) + Number(_actualProgress.totalPnl || 0) + Number(_actualProgress.netTransfers || 0);
     const gap = sc.res.finalBalance - actualBalance;
     return `<div class="scenario-card">
       <div class="scenario-card-header">
@@ -3527,7 +3556,7 @@ function renderScenarios() {
         <div class="scenario-row"><span class="s-label">Final Balance</span><span class="s-val">${fmtCurrency(sc.res.finalBalance)}</span></div>
         <div class="scenario-row"><span class="s-label">Net Return</span><span class="s-val ${pos ? 'pos' : 'neg'}">${fmtPct(sc.res.netReturnPct)}</span></div>
         <div class="scenario-row"><span class="s-label">Profit / Loss</span><span class="s-val ${pos ? 'pos' : 'neg'}">${fmtCurrency(sc.res.totalProfitLoss)}</span></div>
-        <div class="tlc-scenario-vs"><strong>Compared with actual progress</strong><div class="scenario-row"><span class="s-label">Journal net P&amp;L</span><span class="s-val ${Number(_actualProgress.totalPnl || 0) >= 0 ? 'pos' : 'neg'}">${fmtCurrency(Number(_actualProgress.totalPnl || 0))}</span></div><div class="scenario-row"><span class="s-label">Journal return</span><span class="s-val">${hasBalance ? fmtPct(Number(_actualProgress.totalPnl || 0) / Number(_actualProgress.startingBalance) * 100) : 'Add starting balance'}</span></div>${hasBalance ? `<div class="scenario-row"><span class="s-label">Projected end vs current value</span><span class="s-val ${gap >= 0 ? 'pos' : 'neg'}">${fmtCurrency(gap)}</span></div>` : ''}</div>
+        <div class="tlc-scenario-vs"><strong>Compared with actual progress</strong><div class="scenario-row"><span class="s-label">Journal net P&amp;L</span><span class="s-val ${Number(_actualProgress.totalPnl || 0) >= 0 ? 'pos' : 'neg'}">${fmtCurrency(Number(_actualProgress.totalPnl || 0))}</span></div><div class="scenario-row"><span class="s-label">Net account transfers</span><span class="s-val ${Number(_actualProgress.netTransfers || 0) >= 0 ? 'pos' : 'neg'}">${fmtCurrency(Number(_actualProgress.netTransfers || 0))}</span></div><div class="scenario-row"><span class="s-label">Journal return</span><span class="s-val">${hasBalance ? fmtPct(Number(_actualProgress.totalPnl || 0) / Number(_actualProgress.startingBalance) * 100) : 'Add starting balance'}</span></div>${hasBalance ? `<div class="scenario-row"><span class="s-label">Projected end vs current value</span><span class="s-val ${gap >= 0 ? 'pos' : 'neg'}">${fmtCurrency(gap)}</span></div>` : ''}</div>
         <canvas id="sc-mini-${idx}" class="scenario-chart-mini"></canvas>
       </div>
     </div>`;
