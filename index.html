@@ -2648,6 +2648,13 @@ async function wipe(){
 let accountMode='signin',recoveryMode=false;
 const accountConfig=()=>window.TRADELAB_SUPABASE_CONFIG||{};
 function accountConfigured(){const c=accountConfig();return!!(c.url&&/^https:\/\//.test(c.url)&&c.publishableKey&&c.publishableKey!=='YOUR_SUPABASE_PUBLISHABLE_KEY')}
+function accountSyncError(e){
+ const code=String(e?.code||''),detail=[code?`(${code})`:null,e?.message,e?.hint?`Hint: ${e.hint}`:null].filter(Boolean).join(' ');
+ if(code==='42P01'||code==='PGRST205')return`TradeLab’s workspace table is missing or not available in the API. Run all of supabase/schema.sql in Supabase → SQL Editor, then reload. ${detail}`;
+ if(code==='42501'||e?.status===403)return`Supabase denied access to the workspace. Re-run supabase/schema.sql in Supabase → SQL Editor to restore the table permissions, then reload. ${detail}`;
+ if(/failed to fetch|network|load failed/i.test(String(e?.message||'')))return`TradeLab can’t reach Supabase. Check your connection and the project URL in this file. ${detail}`;
+ return`TradeLab couldn’t load the account journal. Check Supabase setup, then try again. ${detail||'No additional error details were returned.'}`
+}
 function renderAccount(){
  const on=!!cloudUser;$('#accountDot').classList.toggle('online',on);$('#accountLabel').textContent=on?(cloudUser.email||'Signed in'):'Account · '+(accountConfigured()?'sign in':'browser only');
  $('#privacyText').textContent=on?'Your journal syncs to your private TradeLab account. Admins can access account workspaces.':accountConfigured()?'Your journal stays in this browser until you sign in to sync it.':'Journal data stays in this browser until cloud accounts are configured.';
@@ -2676,7 +2683,7 @@ async function activateCloudUser(user){
    cloudReady=true;await queueCloudSave();
   }
   cloudReady=true;renderAccount();applyTheme();refresh();
- }catch(e){console.error('Account sync failed',e);cloudReady=false;$('#accountMessage').textContent='Could not load your account journal: '+(e.message||'check the setup guide and try again.');toast('Could not sync your account. Your browser data is still available.')}
+ }catch(e){console.error('Account sync failed',e);cloudReady=false;const message=accountSyncError(e);$('#accountMessage').textContent=message;$('#signedMessage').textContent=message;toast(message,{ms:12000})}
  finally{cloudActivation=''}
 }
 async function initAccounts(){
