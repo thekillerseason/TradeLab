@@ -309,9 +309,9 @@ td.pnl{font-weight:700}
  .brand-copy{gap:0}
  .brand b{font-size:18px;color:var(--ink)}
  .brand-copy small{display:none}
- .sidefoot{display:block;position:fixed;top:calc(env(safe-area-inset-top,0px) + 7px);right:max(10px,env(safe-area-inset-right,0px));width:auto;margin:0;padding:0;border:0;z-index:41}
+ .sidefoot{display:block!important;position:fixed;top:calc(env(safe-area-inset-top,0px) + 7px);right:max(10px,env(safe-area-inset-right,0px));width:auto;margin:0;padding:0;border:0;z-index:41}
  .sidefoot>.sidebtn,.sidefoot>.privacy{display:none}
- .sidefoot .account-btn{width:auto;max-width:min(165px,calc(100vw - 150px));min-height:38px;padding:7px 10px;gap:7px;box-shadow:0 4px 16px rgba(0,0,0,.16)}
+ .sidefoot .account-btn{display:flex;width:auto;max-width:min(165px,calc(100vw - 150px));min-height:44px;padding:7px 10px;gap:7px;box-shadow:0 4px 16px rgba(0,0,0,.16)}
  #accountLabel{display:block;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .navlabel{display:none}
  .navlist{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%;gap:2px}
@@ -405,9 +405,7 @@ td.pnl{font-weight:700}
   <a class="nav" href="#/journal" data-page="journal"><svg viewBox="0 0 24 24"><path d="M5 3h13a2 2 0 0 1 2 2v16H7a3 3 0 0 1-3-3V4a1 1 0 0 1 1-1Z"/><path d="M4 18a3 3 0 0 1 3-3h13M8 7h8M8 11h6"/></svg>Journal<span class="badge" id="navBadge" hidden></span></a>
   <a class="nav" href="#/replay" data-page="replay"><svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/><path d="M3 5v14"/></svg>Replay</a>
   <a class="nav" href="#/backtest" data-page="backtest"><svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-9M3 21h18"/></svg>Practice</a>
-  <a class="nav" href="#/imports" data-page="imports"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg>Import</a>
   <a class="nav" href="#/calculator" data-page="calculator"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M8 19h8"/></svg>Calculator</a>
-  <a class="nav" href="#/drafts" data-page="drafts"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>Drafts<span class="badge" id="draftBadge" hidden></span></a>
  </nav>
  <div class="sidefoot">
   <button class="account-btn" id="accountBtn" type="button"><span class="account-dot" id="accountDot"></span><span id="accountLabel">Account · browser only</span></button>
@@ -781,7 +779,7 @@ td.pnl{font-weight:700}
 </section>
 
 <section class="page" id="journal" hidden>
- <header class="pagehead"><div><h1>Trade journal</h1><p class="sub">Click any trade to add notes, a grade and tags. Reviewing trades is how patterns show up.</p></div><div class="actions"><span id="jScope"></span><button class="btn ghost danger sm" data-act="del-all-trades">Delete all trades</button><button class="btn primary" data-act="add-trade">+ Add trade</button></div></header>
+ <header class="pagehead"><div><h1>Trade journal</h1><p class="sub">Click any trade to add notes, a grade and tags. Reviewing trades is how patterns show up.</p></div><div class="actions"><span id="jScope"></span><button class="btn sm" data-act="go" data-arg="imports">Import CSV</button><button class="btn sm" data-act="go" data-arg="drafts">Saved drafts <span class="badge" id="journalDraftCount" hidden></span></button><button class="btn ghost danger sm" data-act="del-all-trades">Delete all trades</button><button class="btn primary" data-act="add-trade">+ Add trade</button></div></header>
  <div id="jBanners"></div>
  <div id="jProgress"></div>
  <div class="panel">
@@ -2704,8 +2702,8 @@ async function loadAdminUsers(){
 const TITLES={overview:'Overview',journal:'Trade journal',replay:'Trade replay',backtest:'Practice trading',imports:'Import',calculator:'Trading calculator',drafts:'Saved drafts'};
 function renderNav(){
  const n=scoped().filter(t=>!reviewed(t)).length,b=$('#navBadge');b.hidden=!n||!state.trades.length;b.textContent=n>99?'99+':n;
- const drafts=$('#draftBadge');drafts.hidden=!state.drafts.length;drafts.textContent=state.drafts.length>99?'99+':state.drafts.length;
- $$('.nav').forEach(a=>{a.dataset.page===currentPage?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})
+ const drafts=$('#journalDraftCount');drafts.hidden=!state.drafts.length;drafts.textContent=state.drafts.length>99?'99+':state.drafts.length;
+ $$('.nav').forEach(a=>{a.dataset.page===currentPage||(['imports','drafts'].includes(currentPage)&&a.dataset.page==='journal')?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})
 }
 function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length,flows=accountCashflowTotals();window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance:Math.max(0,Number(state.prefs.startingBalance)||0),tradeCount:closed.length,totalPnl,wins,netTransfers:flows.net,deposits:flows.deposits,withdrawals:flows.withdrawals}}))},drafts:renderDrafts};r[p]()}
 function refresh(){renderNav();renderPage(currentPage)}
