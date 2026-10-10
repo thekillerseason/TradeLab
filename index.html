@@ -124,6 +124,9 @@ h3{font-size:14px;font-weight:700}
 .account-flow-row>strong{font-size:12px;white-space:nowrap}
 .account-flow-remove{width:28px;height:28px;min-width:28px;font-size:17px;color:var(--muted)}
 .account-flow-empty{padding:8px 0 2px;color:var(--muted);font-size:11.5px}
+.account-flow-dialog .account-activity{padding:0;border:0}
+.account-flow-dialog .account-flow-list{max-height:260px}
+.account-flow-dialog .account-activity-head{margin-bottom:12px}
 .portfolio-table{width:100%;border-collapse:collapse;font-size:13px}
 .portfolio-table th,.portfolio-table td{padding:9px 10px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
 .portfolio-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.045em;font-weight:700}
@@ -2116,10 +2119,14 @@ function miniTable(list){
 function accountCashflowTotals(){const rows=state.prefs.accountCashflows||[],deposits=rows.filter(x=>x.type==='deposit').reduce((a,x)=>a+Number(x.amount||0),0),withdrawals=rows.filter(x=>x.type==='withdrawal').reduce((a,x)=>a+Number(x.amount||0),0);return{deposits,withdrawals,net:deposits-withdrawals}}
 function accountActivityHTML(){
  const rows=[...(state.prefs.accountCashflows||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
- return`<section class="account-activity" aria-label="Account deposits and withdrawals"><div class="account-activity-head"><div><h3>Deposits &amp; withdrawals</h3><p>Transfers update estimated account value; they stay separate from trading P&amp;L.</p></div></div>
+ return`<section class="account-activity account-activity-compact" aria-label="Account deposits and withdrawals"><button class="btn sm" type="button" data-act="account-flow-open">Deposits / Withdrawals${rows.length?` <span class="badge">${rows.length}</span>`:''}</button></section>`
+}
+function openAccountActivity(){
+ const rows=[...(state.prefs.accountCashflows||[])].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
+ const m=openModal(`<div class="panelhead"><div><h2>Deposits / Withdrawals</h2><p class="muted small">Transfers affect estimated account value and remain separate from trading P&amp;L.</p></div><button class="iconbtn" type="button" data-x="close" aria-label="Close">✕</button></div>
   <div class="account-flow-form"><label>Type<select id="accountFlowType"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option></select></label><label>Amount<input id="accountFlowAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></label><label>Date<input id="accountFlowDate" type="date" value="${dayKey(Date.now())}" max="${dayKey(Date.now())}"></label><label class="account-flow-note">Note <input id="accountFlowNote" type="text" maxlength="100" placeholder="Optional"></label><button class="btn sm primary account-flow-add" type="button" data-act="account-flow-add">Add</button></div>
-  ${rows.length?`<div class="account-flow-list" aria-label="Saved account transfers">${rows.map(x=>`<div class="account-flow-row"><div><strong>${x.type==='deposit'?'Deposit':'Withdrawal'}</strong><span>${esc(new Date(x.date+'T12:00:00').toLocaleDateString())}${x.note?' · '+esc(x.note):''}</span></div><strong class="${x.type==='deposit'?'pos':'neg'}">${x.type==='deposit'?'+':'−'}${esc(money(x.amount))}</strong><button class="iconbtn account-flow-remove" type="button" data-act="account-flow-delete" data-arg="${esc(x.id)}" aria-label="Remove ${x.type} of ${esc(money(x.amount))}">×</button></div>`).join('')}</div>`:`<p class="account-flow-empty">No deposits or withdrawals added yet.</p>`}
- </section>`
+  ${rows.length?`<div class="account-flow-list" aria-label="Saved account transfers">${rows.map(x=>`<div class="account-flow-row"><div><strong>${x.type==='deposit'?'Deposit':'Withdrawal'}</strong><span>${esc(new Date(x.date+'T12:00:00').toLocaleDateString())}${x.note?' · '+esc(x.note):''}</span></div><strong class="${x.type==='deposit'?'pos':'neg'}">${x.type==='deposit'?'+':'−'}${esc(money(x.amount))}</strong><button class="iconbtn account-flow-remove" type="button" data-act="account-flow-delete" data-arg="${esc(x.id)}" aria-label="Remove ${x.type} of ${esc(money(x.amount))}">×</button></div>`).join('')}</div>`:`<p class="account-flow-empty">No deposits or withdrawals added yet.</p>`}`,{label:'Deposits and Withdrawals'});
+ m.el.classList.add('account-flow-dialog');m.el.addEventListener('click',e=>{if(e.target.closest('[data-x]'))closeModal(m)})
 }
 function welcomeHTML(){
  return`<div class="hero"><h2>Learn from every trade.</h2><p>TradeLab turns your trade history into a journal you can actually learn from — then lets you replay trades and practice on past markets. Pick a place to start:</p>
@@ -2799,8 +2806,9 @@ const ACTS={
  'clear-filters':()=>{Object.assign(jf,{q:'',result:'all',side:'all',source:'all',day:null});renderJournal()},
  more:()=>{jLimit+=50;renderJournalList()},
  'review-next':()=>{const l=journalList().find(t=>!reviewed(t))||scoped().find(t=>!reviewed(t));l?openDetail(l.id):toast('Everything is reviewed.')},
- 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note});await saveCore();renderOverview();toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
- 'account-flow-delete':async a=>{const rows=state.prefs.accountCashflows||[];if(!rows.some(x=>x.id===a))return;state.prefs.accountCashflows=rows.filter(x=>x.id!==a);await saveCore();renderOverview();toast('Account transfer removed.')},
+ 'account-flow-open':openAccountActivity,
+ 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note});await saveCore();closeModal();renderOverview();toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
+ 'account-flow-delete':async a=>{const rows=state.prefs.accountCashflows||[];if(!rows.some(x=>x.id===a))return;state.prefs.accountCashflows=rows.filter(x=>x.id!==a);await saveCore();closeModal();renderOverview();toast('Account transfer removed.')},
  'del-selected':async()=>{const ids=[...sel];if(ids.length&&await confirmBox({title:`Delete ${plural(ids.length,'trade')}?`,body:'You can undo right after.',ok:'Delete',danger:true}))deleteTrades(ids)},
  'del-all-trades':async()=>{const ids=state.trades.map(t=>t.id);if(!ids.length)return;if(await confirmBox({title:'Delete all trades?',body:`This removes all ${plural(ids.length,'trade')} and their notes from the journal. You can undo right after.`,ok:'Delete all trades',danger:true}))deleteTrades(ids)},
  'clear-sel':()=>{sel.clear();renderJournalList()},
@@ -4091,6 +4099,19 @@ cEl('btnReset')?.addEventListener('click', () => {
 
 
 </script>
+
+<style>
+/* Consistent title case for card headings, field labels, and card actions. */
+.page :is(.panel,.card) :is(h2,h3,h4,label,summary,button),
+.page :is(.card-title,.section-title,.section-label,.toggle-label,.label-text,.stat-label,.portfolio-card .l,.portfolio-support-title,.portfolio-support-item > span,.kpi > .l,.tf-leg-heading strong) {
+  text-transform: capitalize;
+}
+.page :is(.panel,.card) label :is(input,select,textarea),
+.page :is(.panel,.card) input::placeholder,
+.page :is(.panel,.card) textarea::placeholder {
+  text-transform: none;
+}
+</style>
 
 </body>
 </html>
