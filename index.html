@@ -2648,8 +2648,8 @@ async function wipe(){
 let accountMode='signin',recoveryMode=false;
 const accountConfig=()=>window.TRADELAB_SUPABASE_CONFIG||{};
 function accountConfigured(){const c=accountConfig();return!!(c.url&&/^https:\/\//.test(c.url)&&c.publishableKey&&c.publishableKey!=='YOUR_SUPABASE_PUBLISHABLE_KEY')}
-function accountSyncError(e){
- const code=String(e?.code||''),detail=[code?`(${code})`:null,e?.message,e?.hint?`Hint: ${e.hint}`:null].filter(Boolean).join(' ');
+function accountSyncError(e,phase){
+ const code=String(e?.code||''),trace=String(e?.stack||'').split('\n').slice(1,4).join(' | '),detail=[code?`Code: ${code}.`:null,e?.message,e?.hint?`Hint: ${e.hint}`:null,`Stage: ${phase}.`,trace?`Trace: ${trace}`:null].filter(Boolean).join(' ');
  if(code==='42P01'||code==='PGRST205')return`TradeLab’s workspace table is missing or not available in the API. Run all of supabase/schema.sql in Supabase → SQL Editor, then reload. ${detail}`;
  if(code==='42501'||e?.status===403)return`Supabase denied access to the workspace. Re-run supabase/schema.sql in Supabase → SQL Editor to restore the table permissions, then reload. ${detail}`;
  if(/failed to fetch|network|load failed/i.test(String(e?.message||'')))return`TradeLab can’t reach Supabase. Check your connection and the project URL in this file. ${detail}`;
@@ -2670,20 +2670,23 @@ async function activateCloudUser(user){
  if(!user)return;
  if(cloudUser?.id===user.id&&cloudReady){cloudUser=user;renderAccount();return}
  if(cloudActivation===user.id)return;cloudActivation=user.id;cloudReady=false;cloudUser=user;renderAccount();
+ let syncPhase='requesting account workspace from Supabase';
  try{
   const{data,error}=await cloudClient.from('tradelab_workspaces').select('workspace').eq('user_id',user.id).maybeSingle();if(error)throw error;
   const old=state,hasLocal=old.trades.length||old.drafts.length||old.candles.length;
   if(data?.workspace&&typeof data.workspace==='object'){
+   syncPhase='applying account workspace data';
    adopt(data.workspace);state.candles=Array.isArray(data.workspace.candles)?normCandles(data.workspace.candles):[];toast('Your account journal has loaded.')
   }else{
+   syncPhase='setting up a new account workspace';
    let upload=false;
    if(hasLocal)upload=await confirmBox({title:'Save this browser’s journal to your account?',body:`This account has no cloud journal yet. Upload <b>${plural(old.trades.length,'trade')}</b>, <b>${plural(old.drafts.length,'draft')}</b> and <b>${plural(old.candles.length,'candle')}</b> from this browser?`,ok:'Upload to my account'});
    if(upload){state=old;toast('Saving this browser’s journal to your account…')}
    else{state=blank();state.prefs.theme=old.prefs.theme}
    cloudReady=true;await queueCloudSave();
   }
-  cloudReady=true;renderAccount();applyTheme();refresh();
- }catch(e){console.error('Account sync failed',e);cloudReady=false;const message=accountSyncError(e);$('#accountMessage').textContent=message;$('#signedMessage').textContent=message;toast(message,{ms:12000})}
+  cloudReady=true;syncPhase='refreshing the TradeLab screen';renderAccount();applyTheme();refresh();
+ }catch(e){console.error('Account sync failed during '+syncPhase,e);cloudReady=false;const message=accountSyncError(e,syncPhase);$('#accountMessage').textContent=message;$('#signedMessage').textContent=message;toast(message,{ms:20000})}
  finally{cloudActivation=''}
 }
 async function initAccounts(){
