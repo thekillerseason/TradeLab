@@ -45,6 +45,10 @@ h3{font-size:14px;font-weight:700}
 .sidebtn:hover{background:var(--nav2);color:#fff}
 .sidebtn kbd{margin-left:auto}.themedot{width:14px;height:14px;border-radius:50%;border:1.5px solid #8fa3b3;flex:none}.themedot.auto{background:linear-gradient(90deg,#f4c95d 50%,#1b2f44 50%)}.themedot.light{background:#f4c95d}.themedot.dark{background:#1b2f44}
 .privacy{font-size:12px;color:#8197a8;padding:4px 12px 0;line-height:1.45}
+.account-btn{display:flex;align-items:center;gap:10px;width:100%;background:var(--nav2);border:1px solid #2b4054;color:#fff;padding:9px 12px;border-radius:10px;text-align:left;font-size:13.5px;font-weight:650}
+.account-btn:hover{border-color:#4a6a83}.account-dot{width:9px;height:9px;background:#f2bb57;border-radius:50%;flex:none}.account-dot.online{background:#43d4b7}
+.account-dialog{width:min(520px,calc(100vw - 28px));max-height:min(90vh,760px);overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);padding:0;box-shadow:0 24px 80px #0005}
+.account-dialog::backdrop{background:#08121dcc;backdrop-filter:blur(3px)}.account-content{padding:22px}.account-form{display:grid;gap:12px;margin-top:16px}.account-form label{display:grid;gap:5px;color:var(--ink2);font-size:13px;font-weight:650}.account-form input{width:100%;min-height:42px;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;padding:8px 11px;color:var(--ink)}.account-msg{min-height:20px;color:var(--muted);font-size:13px}.account-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.account-link{border:0;background:none;color:var(--teal);font-size:13px;font-weight:650;padding:6px 0}.account-userlist{display:grid;gap:8px;max-height:350px;overflow:auto;margin-top:14px}.account-user{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .main{margin-left:228px;width:calc(100% - 228px);max-width:1560px;padding:30px clamp(18px,3.2vw,52px) 70px}
 .pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:22px}
 .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -261,6 +265,8 @@ td.pnl{font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--nav);color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.35);z-index:80;max-width:min(560px,calc(100% - 24px));display:flex;gap:14px;align-items:center;font-size:14px}
 .toast button{background:none;border:0;color:#5fd6c3;font-weight:800;padding:2px 4px;white-space:nowrap}
 .bulk{display:flex;gap:10px;align-items:center;background:var(--teal-soft);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-weight:650}
+.draft-list{display:grid;gap:12px}.draft-card{display:flex;align-items:center;justify-content:space-between;gap:16px}.draft-card h2{margin:0 0 4px}.draft-card p{color:var(--muted);font-size:13px}.draft-card .actions{flex-shrink:0}
+@media(max-width:600px){.draft-card{align-items:flex-start;flex-direction:column}.draft-card .actions{width:100%}}
 .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
 .controls input[type=range]{flex:1;min-width:120px}
 .readout{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:14px}
@@ -369,11 +375,13 @@ td.pnl{font-weight:700}
   <a class="nav" href="#/backtest" data-page="backtest"><svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-9M3 21h18"/></svg>Practice</a>
   <a class="nav" href="#/imports" data-page="imports"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg>Import</a>
   <a class="nav" href="#/calculator" data-page="calculator"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M8 19h8"/></svg>Calculator</a>
+  <a class="nav" href="#/drafts" data-page="drafts"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg>Drafts<span class="badge" id="draftBadge" hidden></span></a>
  </nav>
  <div class="sidefoot">
+  <button class="account-btn" id="accountBtn" type="button"><span class="account-dot" id="accountDot"></span><span id="accountLabel">Account · browser only</span></button>
   <button class="sidebtn" data-act="theme" id="themeBtn"><span class="themedot" id="themeIcon"></span><span id="themeLabel">Theme: Auto</span></button>
   <button class="sidebtn" data-act="help">Keyboard shortcuts <kbd>?</kbd></button>
-  <p class="privacy">Everything stays in this browser. Nothing is uploaded.</p>
+  <p class="privacy" id="privacyText">Journal data stays in this browser until cloud accounts are configured.</p>
  </div>
 </aside>
 
@@ -757,6 +765,11 @@ td.pnl{font-weight:700}
  </div>
 </section>
 
+<section class="page" id="drafts" hidden>
+ <header class="pagehead"><div><h1>Saved drafts</h1><p class="sub">Pick up unfinished trade forms whenever you’re ready.</p></div><div class="actions"><button class="btn primary" data-act="add-trade">+ New trade draft</button></div></header>
+ <div id="draftsBody"></div>
+</section>
+
 <section class="page" id="replay" hidden>
  <header class="pagehead"><div><h1>Trade replay</h1><p class="sub">Replay a trade on five-minute candles, with up to 20 bars before entry and the next hour after exit.</p></div>
   <div class="actions"><button class="iconbtn" id="rpPrevTrade" aria-label="Previous trade" title="Previous trade">‹</button><select id="rpTrade" aria-label="Choose a trade" style="max-width:min(360px,60vw)"></select><button class="iconbtn" id="rpNextTrade" aria-label="Next trade" title="Next trade">›</button></div></header>
@@ -850,6 +863,29 @@ td.pnl{font-weight:700}
 </main></div>
 <div class="dropover" id="dropOver" hidden><div>Drop your CSV to import</div></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<dialog class="account-dialog" id="accountDialog" aria-labelledby="accountTitle">
+ <div class="account-content">
+  <div class="between"><div><h2 id="accountTitle">TradeLab account</h2><p class="sub" id="accountSub">Create an account to keep your journal with you.</p></div><button class="iconbtn" id="accountClose" type="button" aria-label="Close">✕</button></div>
+  <div id="accountAuthView">
+   <form class="account-form" id="accountForm">
+    <label>Email<input id="accountEmail" type="email" autocomplete="email" required></label>
+    <label id="accountPasswordLabel">Password<input id="accountPassword" type="password" autocomplete="current-password" minlength="8" required></label>
+    <label id="accountNewPasswordLabel" hidden>New password<input id="accountNewPassword" type="password" autocomplete="new-password" minlength="8"></label>
+    <div class="account-actions"><button class="btn primary" id="accountSubmit" type="submit">Sign in</button><button class="account-link" id="accountMode" type="button">Create an account</button></div>
+    <button class="account-link" id="accountForgot" type="button">Forgot password?</button>
+    <p class="account-msg" id="accountMessage" role="status"></p>
+   </form>
+  </div>
+  <div id="accountSignedView" hidden>
+   <div class="banner mt"><span>Signed in as <b id="accountSignedEmail"></b>. Your journal syncs to your private account.</span></div>
+   <div class="account-actions mt"><button class="btn" id="accountAdminBtn" type="button" hidden>Admin controls</button><button class="btn" id="accountSignOut" type="button">Sign out</button></div>
+   <div id="accountAdminView" hidden><div class="panelhead mt"><h3>Accounts</h3><button class="btn sm" id="adminRefresh" type="button">Refresh list</button></div><p class="muted small">Send a secure password reset link or delete an account. Admins can view and manage every saved workspace.</p><div class="account-userlist" id="adminUsers"></div></div>
+   <p class="account-msg mt" id="signedMessage" role="status"></p>
+  </div>
+ </div>
+</dialog>
+<script>window.TRADELAB_SUPABASE_CONFIG={url:'',publishableKey:'YOUR_SUPABASE_PUBLISHABLE_KEY'};</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 #tradelab-calc-page{
@@ -1632,14 +1668,16 @@ function priceFmt(p){const a=Math.abs(p);const d=a>=1000?2:a>=10?2:a>=1?3:5;retu
 
 /* ===================== state & storage ===================== */
 const DEFAULT_PREFS={theme:'auto',scope:'auto',range:'all',lastBackup:0,snoozeBackup:0,btQty:1,btMult:1,sort:{key:'exit',dir:-1},calMonth:null,breakBy:'symbol',startingBalance:0};
-const blank=()=>({version:2,trades:[],candles:[],bt:{symbol:'',index:0,position:null},prefs:{...DEFAULT_PREFS,sort:{...DEFAULT_PREFS.sort}}});
+const blank=()=>({version:2,trades:[],drafts:[],candles:[],bt:{symbol:'',index:0,position:null},prefs:{...DEFAULT_PREFS,sort:{...DEFAULT_PREFS.sort}}});
 let state=blank(),db=null,storageOk=true,writeQ=Promise.resolve();
+let cloudClient=null,cloudUser=null,cloudReady=false,cloudSaveTimer=null,cloudSaveWaiters=[],cloudActivation='';
 function normTrade(t){t.id=t.id||uid();t.tags=Array.isArray(t.tags)?t.tags:[];t.notes=t.notes||'';t.strategy=t.strategy||'';t.grade=t.grade||'';t.source=t.source||'Imported';t.fees=Number(t.fees)||0;t.multiplier=Number(t.multiplier)||1;t.side=t.side==='Short'?'Short':'Long';t.qty=Number(t.qty)||0;return t}
-function adopt(src){const b=blank();state.trades=(src.trades||[]).filter(t=>t&&typeof t.symbol==='string'&&t.entry).map(normTrade);state.bt={...b.bt,...(src.bt||{})};state.prefs={...b.prefs,...(src.prefs||{}),sort:{...b.prefs.sort,...((src.prefs||{}).sort||{})}}}
+function adopt(src){const b=blank();state.trades=(src.trades||[]).filter(t=>t&&typeof t.symbol==='string'&&t.entry).map(normTrade);state.drafts=Array.isArray(src.drafts)?src.drafts.filter(d=>d&&typeof d.id==='string'):[];state.bt={...b.bt,...(src.bt||{})};state.prefs={...b.prefs,...(src.prefs||{}),sort:{...b.prefs.sort,...((src.prefs||{}).sort||{})}}}
 function normCandles(a){for(const c of a)c.t=ts(c.time);return a}
 const idbReq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 async function initStore(){
  try{
+  state=blank();
   if(!window.indexedDB)throw new Error('IndexedDB unavailable');
   db=await new Promise((res,rej)=>{const q=indexedDB.open('tradelab-v1',1);q.onupgradeneeded=()=>q.result.createObjectStore('workspace');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);q.onblocked=()=>rej(new Error('blocked'))});
   const rd=k=>idbReq(db.transaction('workspace','readonly').objectStore('workspace').get(k));
@@ -1650,8 +1688,22 @@ async function initStore(){
  }catch(e){console.warn('Storage unavailable',e);db=null;storageOk=false}
 }
 function put(key,val){if(!db)return Promise.resolve();writeQ=writeQ.then(()=>new Promise((res,rej)=>{const tx=db.transaction('workspace','readwrite');tx.objectStore('workspace').put(val,key);tx.oncomplete=res;tx.onerror=tx.onabort=()=>rej(tx.error)})).catch(e=>{console.error(e);toast('Couldn’t save to this browser — storage may be full. Download a backup from Import.')});return writeQ}
-const saveCore=()=>put('core',{version:2,trades:state.trades,bt:state.bt,prefs:state.prefs});
-const saveCandles=()=>{invalidateCandles();return put('candles',state.candles)};
+function workspacePayload(){return{version:2,trades:state.trades,drafts:state.drafts,candles:state.candles.map(({t,...c})=>c),bt:state.bt,prefs:state.prefs}}
+async function flushCloudSave(){
+ clearTimeout(cloudSaveTimer);cloudSaveTimer=null;const waiters=cloudSaveWaiters.splice(0);if(!waiters.length)return;
+ const client=cloudClient,userId=cloudUser?.id,payload=workspacePayload();
+ if(!client||!userId){waiters.forEach(resolve=>resolve());return}
+ try{const{error}=await client.from('tradelab_workspaces').upsert({user_id:userId,workspace:payload,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)throw error;waiters.forEach(resolve=>resolve())}
+ catch(e){console.error('Cloud save failed',e);toast('Cloud sync failed. Check your connection; download a backup before signing out.');waiters.forEach(resolve=>resolve())}
+}
+function queueCloudSave(){
+ if(!cloudUser||!cloudReady||!cloudClient)return Promise.resolve();
+ const done=new Promise(resolve=>cloudSaveWaiters.push(resolve));clearTimeout(cloudSaveTimer);
+ cloudSaveTimer=setTimeout(flushCloudSave,450);
+ return done
+}
+const saveCore=()=>cloudUser?queueCloudSave():put('core',{version:2,trades:state.trades,drafts:state.drafts,bt:state.bt,prefs:state.prefs});
+const saveCandles=()=>{invalidateCandles();return cloudUser?queueCloudSave():put('candles',state.candles)};
 
 /* candles */
 let cCache=new Map();
@@ -1939,7 +1991,7 @@ function drawCandles(el,series,end,o={}){
 }
 /* ===================== shared bits ===================== */
 let currentPage='overview';
-const PAGES=['overview','journal','replay','backtest','imports','calculator'];
+const PAGES=['overview','journal','replay','backtest','imports','calculator','drafts'];
 const ICON={upload:'<svg viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M4 17v3h16v-3"/></svg>',pen:'<svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',spark:'<svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>'};
 function scopeSeg(){
  if(!(state.trades.some(isLive)&&state.trades.some(t=>!isLive(t))))return'';
@@ -1950,11 +2002,11 @@ function sampleBanner(list){
  if(!list.some(t=>t.source==='Sample'))return'';
  return`<div class="banner warn"><span><b>You’re looking at sample data.</b> It’s made up, so feel free to click around.</span><button class="btn sm" data-act="rm-sample">Remove sample data</button></div>`
 }
-function storageBanner(){return storageOk?'':`<div class="banner warn"><span><b>This browser isn’t saving your data.</b> Private windows and some file settings block storage. Download a backup before you close this tab.</span><button class="btn sm" data-act="backup">Download backup</button></div>`}
+function storageBanner(){return storageOk?'':`<div class="banner warn"><span><b>${cloudUser?'Browser storage is unavailable. Cloud sync is active.':'This browser isn’t saving your data.'}</b> ${cloudUser?'Your account holds the synced journal. Download a backup before closing as an extra safeguard.':'Private windows and some file settings block storage. Download a backup before you close this tab.'}</span><button class="btn sm" data-act="backup">Download backup</button></div>`}
 function backupBanner(){
  if(!storageOk||!state.trades.some(isLive))return'';const now=Date.now(),p=state.prefs;
  if(now<p.snoozeBackup||now-p.lastBackup<14*DAY)return'';
- return`<div class="banner"><span><b>Back up your journal.</b> Your data lives only in this browser${p.lastBackup?'; your last backup was '+dur(now-p.lastBackup).replace(/ \d+m$/,'')+' ago':' and you haven’t made a backup yet'}.</span><span class="row"><button class="btn sm primary" data-act="backup">Download backup</button><button class="btn sm ghost" data-act="snooze">Later</button></span></div>`
+ return`<div class="banner"><span><b>Back up your journal.</b> ${cloudUser?'Your data syncs to your account':'Your data lives only in this browser'}${p.lastBackup?'; your last backup was '+dur(now-p.lastBackup).replace(/ \d+m$/,'')+' ago':' and you haven’t made a backup yet'}.</span><span class="row"><button class="btn sm primary" data-act="backup">Download backup</button><button class="btn sm ghost" data-act="snooze">Later</button></span></div>`
 }
 function miniTable(list){
  if(!list.length)return emptyBox('No trades yet','');
@@ -1969,7 +2021,7 @@ function welcomeHTML(){
   <button class="path" data-act="add-trade"><div class="ic">${ICON.pen}</div><strong>Log a trade by hand</strong><span class="d">Add a single trade in about ten seconds.</span></button>
   <button class="path" data-act="sample"><div class="ic">${ICON.spark}</div><strong>Explore with sample data</strong><span class="d">Look around with made-up trades. Remove them any time.</span></button>
  </div>
- <div class="steps"><span><b>Journal</b> your trades</span>·<span><b>Replay</b> them candle by candle</span>·<span><b>Practice</b> on past markets</span>·<span>Private — nothing leaves your browser</span></div></div>`
+ <div class="steps"><span><b>Journal</b> your trades</span>·<span><b>Replay</b> them candle by candle</span>·<span><b>Practice</b> on past markets</span>·<span>${cloudUser?'Private account sync':'Private — this browser only'}</span></div></div>`
 }
 function portfolioSnapshot(base){
  const closed=base.filter(t=>t.exit&&Number.isFinite(t.pnl)).sort((a,b)=>ts(a.exit)-ts(b.exit));
@@ -2003,7 +2055,7 @@ function portfolioSnapshot(base){
    <div class="portfolio-support-item"><span>Closed positions</span><strong>${esc(num(n))}</strong></div>
    <div class="portfolio-support-item"><span>Fees paid</span><strong>${esc(money(fees))}</strong></div>
    <div class="portfolio-support-item"><span>Average trade duration</span><strong>${n?esc(dur(closed.reduce((a,t)=>a+Math.max(0,ts(t.exit)-ts(t.entry)),0)/n)):'—'}</strong></div>
-  </div><div class="portfolio-foot">Percentages use starting account size. Daily averages include dates with closed positions; weekly averages use elapsed calendar weeks between first and latest close. Starting balance is saved in this browser.</div></div>
+  </div><div class="portfolio-foot">Percentages use starting account size. Daily averages include dates with closed positions; weekly averages use elapsed calendar weeks between first and latest close. Starting balance is saved ${cloudUser?'to your account':'in this browser'}.</div></div>
  </section>`
 }
 function renderOverview(){
@@ -2088,6 +2140,11 @@ function renderJournalList(){
  const th=(k,l,c='')=>`<th class="sortable ${c}" data-sort="${k}" aria-sort="${key===k?(dir>0?'ascending':'descending'):'none'}">${l}${key===k?(dir>0?' ▲':' ▼'):''}</th>`;
  $('#jList').innerHTML=`<div class="tablewrap"><table><thead><tr><th class="chk"><input type="checkbox" data-selall aria-label="Select all shown trades" ${shown.every(t=>sel.has(t.id))?'checked':''}></th>${th('exit','Closed')}${th('symbol','Symbol')}${th('side','Side')}${th('qty','Qty','num hide-sm')}<th class="num hide-sm">Entry → exit</th>${th('pnl','Net P&amp;L','num')}${th('grade','Grade','hide-sm')}${th('strategy','Strategy','hide-md')}<th>Reviewed</th></tr></thead><tbody>${shown.map(t=>`<tr data-id="${esc(t.id)}" class="${sel.has(t.id)?'selected':''}" tabindex="0"><td class="chk"><input type="checkbox" data-sel aria-label="Select ${esc(symbolLabel(t))} trade" ${sel.has(t.id)?'checked':''}></td><td>${esc(dFull(t.exit||t.entry))}</td><td class="sym">${esc(symbolLabel(t))}${t.source!=='Imported'&&t.source!=='Manual'?` <span class="pill ${t.source==='Sample'?'sample':''}" style="margin-left:4px;font-size:10.5px">${esc(t.source)}</span>`:''}</td><td><span class="pill ${t.side.toLowerCase()}">${t.side}</span></td><td class="num hide-sm">${esc(num(t.qty))}</td><td class="num hide-sm">${esc(num(t.entryPrice))} → ${esc(num(t.exitPrice))}</td><td class="num pnl ${tone(t.pnl)}"><span>${esc(pnl(t.pnl))}</span> <small class="return-pct" title="Net return on entry value">(${esc(returnLabel(t))})</small></td><td class="hide-sm">${t.grade?`<span class="grade ${esc(t.grade)}">${esc(t.grade)}</span>`:'<span class="muted">—</span>'}</td><td class="hide-md">${esc(t.strategy||'—')}</td><td><span class="dot ${reviewed(t)?'on':''}" title="${reviewed(t)?'Reviewed':'Not reviewed yet'}"></span><span class="sr" style="position:absolute;left:-999px">${reviewed(t)?'Reviewed':'Not reviewed'}</span></td></tr>`).join('')}</tbody></table></div>${list.length>shown.length?`<div style="text-align:center;margin-top:14px"><button class="btn" data-act="more">Show ${Math.min(50,list.length-shown.length)} more (${list.length-shown.length} left)</button></div>`:''}`
 }
+function renderDrafts(){
+ const body=$('#draftsBody'),list=[...state.drafts].sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt));
+ if(!list.length){body.innerHTML=storageBanner()+emptyBox('No saved drafts','Save an unfinished trade form and it will be waiting here when you come back.','<button class="btn primary" data-act="add-trade">Start a trade</button>');return}
+ body.innerHTML=storageBanner()+`<div class="draft-list">${list.map(d=>{const legs=(d.entries?.length||0)+' entries · '+(d.exits?.length||0)+' exits',contract=d.optionPricing?`${d.optionStrike||'Strike not set'} ${d.optionType||'Call/Put'}${d.optionExpiration?' · expires '+esc(dDay(d.optionExpiration+'T12:00')):''}`:'Stock / other';return`<article class="panel draft-card"><div><h2>${esc(d.symbol||'Untitled trade')} <span class="pill ${String(d.side||'Long').toLowerCase()}">${esc(d.side||'Long')}</span></h2><p>${esc(contract)} · ${esc(legs)}</p><p>Updated ${esc(dFull(d.updatedAt))}</p></div><div class="actions"><button class="btn primary" data-act="draft-open" data-arg="${esc(d.id)}">Continue draft</button><button class="btn ghost danger sm" data-act="draft-delete" data-arg="${esc(d.id)}">Delete</button></div></article>`}).join('')}</div>`
+}
 
 /* ===================== trade detail modal ===================== */
 const PRESET_TAGS=['Followed plan','Patient entry','Chased entry','FOMO','Revenge trade','Moved stop','Oversized','Exited early','Held too long'];
@@ -2150,15 +2207,15 @@ function parseFillClock(value){
 }
 function formatFillClock(value){const p=parseFillClock(value);if(!p)return'';const h=p.hour%12||12;return`${h}:${p2(p.minute)} ${p.hour<12?'AM':'PM'}`}
 function fillDateTime(date,clock){const p=parseFillClock(clock),m=String(date||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!p||!m)return null;const y=Number(m[1]),mo=Number(m[2])-1,d=Number(m[3]),dt=new Date(y,mo,d,p.hour,p.minute,0,0);if(dt.getFullYear()!==y||dt.getMonth()!==mo||dt.getDate()!==d||dt.getHours()!==p.hour||dt.getMinutes()!==p.minute)return null;return dt.toISOString()}
-function openTradeForm(id){
- const t=id?state.trades.find(x=>x.id===id):null,now=Date.now(),d=t||{symbol:'',side:'Long',qty:'',entryPrice:'',exitPrice:'',entry:new Date(now-30*6e4).toISOString(),exit:new Date(now).toISOString(),fees:'',multiplier:1};
- let side=d.side,optionPricing=t?!!(t.contractSymbol||isOptionContract(d.symbol)):isOptionContract(d.symbol);
+function openTradeForm(id,draftId){
+ const savedDraft=draftId?state.drafts.find(x=>x.id===draftId):null,t=id?state.trades.find(x=>x.id===id):(savedDraft?.baseTradeId?state.trades.find(x=>x.id===savedDraft.baseTradeId):null),now=Date.now(),d=savedDraft||t||{symbol:'',side:'Long',qty:'',entryPrice:'',exitPrice:'',entry:new Date(now-30*6e4).toISOString(),exit:new Date(now).toISOString(),fees:'',multiplier:1};
+ let side=d.side||'Long',optionPricing=savedDraft?!!savedDraft.optionPricing:(t?!!(t.contractSymbol||isOptionContract(d.symbol)):isOptionContract(d.symbol)),rawOptionQuotes=savedDraft?(savedDraft.rawOptionQuotes??!t):!t;
  const parsed=optionContractDetails(d.contractSymbol||d.symbol),optionType=d.optionType||parsed?.optionType||'Call',optionStrike=d.optionStrike??parsed?.optionStrike??'',optionExpiration=d.optionExpiration||parsed?.expiration||'';
  const entrySeed=(Array.isArray(d.entries)&&d.entries.length?d.entries:[{qty:d.qty||1,price:d.entryPrice??''}]).map(x=>({...x,time:x.time||d.entry})),exitSeed=(Array.isArray(d.exits)&&d.exits.length?d.exits:[{qty:d.qty||1,price:d.exitPrice??''}]).map(x=>({...x,time:x.time||d.exit})),hasPerFillFees=t&&[...entrySeed,...exitSeed].some(x=>Number.isFinite(Number(x.fee)));
- let entryFeeEach=hasPerFillFees?feeDollars(entrySeed[0]?.fee):0,exitFeeEach=hasPerFillFees?feeDollars(exitSeed[0]?.fee):(t?feeDollars(d.fees)/Math.max(1,exitSeed.length):0);
+ let entryFeeEach=savedDraft?feeDollars(savedDraft.entryFee):(hasPerFillFees?feeDollars(entrySeed[0]?.fee):0),exitFeeEach=savedDraft?feeDollars(savedDraft.exitFee):(hasPerFillFees?feeDollars(exitSeed[0]?.fee):(t?feeDollars(d.fees)/Math.max(1,exitSeed.length):0));
  const initialLegs=seed=>seed;
- const legRow=(kind,leg)=>{const time=String(leg.time||''),local=time?toInput(time):'',dateValue=local.slice(0,10),clockValue=local?formatFillClock(local.slice(11,16)):'';return`<div class="tf-leg-row" data-leg-row="${kind}"><label>Contracts<input type="number" min="0" step="any" inputmode="decimal" data-leg-qty value="${esc(leg.qty)}" aria-label="${kind==='entry'?'Entry':'Exit'} contracts"></label><label><span data-leg-price-label>${optionPricing&&!t?'Quote per share':'Price'}</span><input type="number" min="0" step="any" inputmode="decimal" data-leg-price value="${esc(leg.price)}" placeholder="${optionPricing&&!t?'1.25':'0.00'}" aria-label="${kind==='entry'?'Entry':'Exit'} price"></label><label class="tf-fill-date">Fill date<input type="date" data-leg-date value="${esc(dateValue)}" aria-label="${kind==='entry'?'Entry':'Exit'} fill date"></label><label class="tf-fill-clock">Fill time<input type="text" data-leg-clock value="${esc(clockValue)}" placeholder="1430 or 2:30 PM" inputmode="text" autocomplete="off" aria-label="${kind==='entry'?'Entry':'Exit'} fill time in military time"></label><span class="tf-line-fee" data-leg-fee>Fee ${esc(money(kind==='entry'?entryFeeEach:exitFeeEach))}</span><button class="btn ghost sm tf-remove-leg" type="button" data-leg-remove aria-label="Remove this fill" title="Remove fill">×</button></div>`};
- const m=openModal(`<div class="panelhead"><h2>${t?'Edit trade':'Add a trade'}</h2><button class="iconbtn" data-x="close" aria-label="Close">✕</button></div>
+ const legRow=(kind,leg)=>{const time=String(leg.time||''),local=time?toInput(time):'',dateValue=leg.date||local.slice(0,10),clockValue=leg.clock|| (local?formatFillClock(local.slice(11,16)):'');return`<div class="tf-leg-row" data-leg-row="${kind}"><label>Contracts<input type="number" min="0" step="any" inputmode="decimal" data-leg-qty value="${esc(leg.qty)}" aria-label="${kind==='entry'?'Entry':'Exit'} contracts"></label><label><span data-leg-price-label>${optionPricing&&rawOptionQuotes?'Quote per share':'Price'}</span><input type="number" min="0" step="any" inputmode="decimal" data-leg-price value="${esc(leg.price)}" placeholder="${optionPricing&&rawOptionQuotes?'1.25':'0.00'}" aria-label="${kind==='entry'?'Entry':'Exit'} price"></label><label class="tf-fill-date">Fill date<input type="date" data-leg-date value="${esc(dateValue)}" aria-label="${kind==='entry'?'Entry':'Exit'} fill date"></label><label class="tf-fill-clock">Fill time<input type="text" data-leg-clock value="${esc(clockValue)}" placeholder="1430 or 2:30 PM" inputmode="text" autocomplete="off" aria-label="${kind==='entry'?'Entry':'Exit'} fill time in military time"></label><span class="tf-line-fee" data-leg-fee>Fee ${esc(money(kind==='entry'?entryFeeEach:exitFeeEach))}</span><button class="btn ghost sm tf-remove-leg" type="button" data-leg-remove aria-label="Remove this fill" title="Remove fill">×</button></div>`};
+ const m=openModal(`<div class="panelhead"><h2>${savedDraft?'Continue draft':t?'Edit trade':'Add a trade'}</h2><button class="iconbtn" data-x="close" aria-label="Close">✕</button></div>
  <p class="hint" style="margin:-4px 0 14px">Add each fill separately, including when it happened. TradeLab calculates weighted averages and uses the first entry and final exit times.</p>
  <div class="formgrid">
   <div class="span"><label for="tfSym">Underlying ticker</label><input id="tfSym" class="wide" placeholder="e.g. SPY" value="${esc(d.symbol)}" autocapitalize="characters" autocomplete="off" autofocus><div class="tf-option-mode"><label for="tfOption"><input id="tfOption" type="checkbox" ${optionPricing?'checked':''}><span><strong>This is an option trade</strong><small>Enter quoted premiums like 1.25. TradeLab converts that to $125 per contract.</small></span></label></div></div>
@@ -2175,16 +2232,17 @@ function openTradeForm(id){
  </div>
  <div class="err" id="tfErr" role="alert"></div>
  ${t&&t.source==='Imported'?'<p class="hint">Saving recalculates profit and loss from these numbers.</p>':''}
- <div class="row end" style="margin-top:16px"><button class="btn" data-x="close">Cancel</button><button class="btn primary" data-x="save">${t?'Save changes':'Add trade'}</button></div>`,{label:t?'Edit trade':'Add trade'});
+ <div class="row end" style="margin-top:16px"><button class="btn ghost" data-x="draft">Save draft</button><button class="btn" data-x="close">Cancel</button><button class="btn primary" data-x="save">${t?'Save changes':'Add trade'}</button></div>`,{label:savedDraft?'Continue trade draft':t?'Edit trade':'Add trade'});
  const el=m.el,v=s=>$(s,el).value;
  const collect=kind=>$$(`[data-leg-row="${kind}"]`,el).map(row=>{const q=$('[data-leg-qty]',row).value,p=$('[data-leg-price]',row).value,date=$('[data-leg-date]',row).value,clock=$('[data-leg-clock]',row).value;return{qty:q.trim()===''?NaN:Number(q),price:p.trim()===''?NaN:Number(p),date,clock,time:fillDateTime(date,clock)}});
- const scaledLegs=(kind,opt,mult)=>collect(kind).map(x=>({...x,price:opt&&!t?importedContractPricing('OPTION',x.price,mult,false,true).price:x.price,fee:feeDollars(v(kind==='entry'?'#tfEntryFee':'#tfExitFee'))}));
+ const scaledLegs=(kind,opt,mult)=>collect(kind).map(x=>({...x,price:opt&&rawOptionQuotes?importedContractPricing('OPTION',x.price,mult,false,true).price:x.price,fee:feeDollars(v(kind==='entry'?'#tfEntryFee':'#tfExitFee'))}));
  const total=legs=>legs.reduce((a,x)=>a+(Number.isFinite(x.qty)&&x.qty>0?x.qty:0),0);
  const average=legs=>{const valid=legs.filter(x=>Number.isFinite(x.qty)&&x.qty>0&&Number.isFinite(x.price)&&x.price>=0),q=total(valid);return q?{qty:q,price:valid.reduce((a,x)=>a+x.qty*x.price,0)/q}:null};
  const read=()=>{const entered=v('#tfSym').trim().toUpperCase(),opt=optionPricing||isOptionContract(entered),mult=t?(Number(v('#tfMult'))||1):(opt?1:(Number(v('#tfMult'))||1)),entries=scaledLegs('entry',opt,mult),exits=scaledLegs('exit',opt,mult),avgEntry=average(entries),avgExit=average(exits),contract=t&&t.contractSymbol?t.contractSymbol:(opt?(isOptionContract(entered)?entered:entered+' OPTION'):null);const entryTimes=entries.map(x=>x.time).filter(Boolean).map(ts),exitTimes=exits.map(x=>x.time).filter(Boolean).map(ts),entry=entryTimes.length?new Date(Math.min(...entryTimes)).toISOString():null,exit=exitTimes.length?new Date(Math.max(...exitTimes)).toISOString():null;return{symbol:opt?underlyingTicker(entered):entered,contractSymbol:contract,optionType:opt?v('#tfRight'):null,optionStrike:opt?Number(v('#tfStrike')):null,optionExpiration:opt?v('#tfExpiration'):null,side,qty:avgEntry?.qty||0,entryPrice:avgEntry?.price??NaN,exitPrice:avgExit?.price??NaN,entries,exits,entry,exit,fees:[...entries.filter(x=>x.qty>0&&Number.isFinite(x.price)),...exits.filter(x=>x.qty>0&&Number.isFinite(x.price))].reduce((sum,x)=>sum+x.fee,0),multiplier:mult,exitQty:avgExit?.qty||0}};
- const preview=()=>{const r=read(),a=average(r.entries),b=average(r.exits),sameQty=Math.abs(r.qty-r.exitQty)<1e-9&&r.qty>0,hasExit=r.exitQty>0,formatAvg=x=>optText(x.price),optText=x=>optionPricing&&!t?`${esc(money(x/100))}/share (${esc(money(x))}/contract)`:esc(money(x));let h='<div class="tf-average-card">';h+=`<div><small>Weighted average entry</small><strong>${a?formatAvg(a):'Add entry fills'}</strong>${a?`<span>${esc(num(a.qty))} contracts</span>`:''}</div><div><small>Weighted average exit</small><strong>${b?formatAvg(b):'Add exit fills'}</strong>${b?`<span>${esc(num(b.qty))} contracts</span>`:''}</div>`;if(hasExit&&!sameQty)h+=`<p class="tf-qty-warning">${r.exitQty<r.qty?`Exit fills cover ${esc(num(r.exitQty))} of ${esc(num(r.qty))} contracts. Add the remaining sale before saving.`:`Exit quantity ${esc(num(r.exitQty))} exceeds entry quantity ${esc(num(r.qty))}.`}</p>`;if(sameQty)h+=`<div class="tf-net-preview"><small>Fees applied: ${esc(money(r.fees))}</small><strong class="${tone(calcPnl(r))}">Estimated net ${esc(pnl(calcPnl(r)))}</strong><span class="tf-return-note">${esc(returnLabel({...r,pnl:calcPnl(r)}))} return on entry value</span></div>`;h+='</div>';$('#tfAverageReadout',el).innerHTML=h};
- const syncOption=()=>{$('#tfOptionDetails',el).style.display=optionPricing?'grid':'none';$('#tfOption',el).checked=optionPricing;$$('[data-leg-price-label]',el).forEach(x=>x.textContent=optionPricing&&!t?'Quote per share':'Price');$$('[data-leg-price]',el).forEach(x=>x.placeholder=optionPricing&&!t?'1.25':'0.00')};
+ const preview=()=>{const r=read(),a=average(r.entries),b=average(r.exits),sameQty=Math.abs(r.qty-r.exitQty)<1e-9&&r.qty>0,hasExit=r.exitQty>0,formatAvg=x=>optText(x.price),optText=x=>optionPricing&&rawOptionQuotes?`${esc(money(x/100))}/share (${esc(money(x))}/contract)`:esc(money(x));let h='<div class="tf-average-card">';h+=`<div><small>Weighted average entry</small><strong>${a?formatAvg(a):'Add entry fills'}</strong>${a?`<span>${esc(num(a.qty))} contracts</span>`:''}</div><div><small>Weighted average exit</small><strong>${b?formatAvg(b):'Add exit fills'}</strong>${b?`<span>${esc(num(b.qty))} contracts</span>`:''}</div>`;if(hasExit&&!sameQty)h+=`<p class="tf-qty-warning">${r.exitQty<r.qty?`Exit fills cover ${esc(num(r.exitQty))} of ${esc(num(r.qty))} contracts. Add the remaining sale before saving.`:`Exit quantity ${esc(num(r.exitQty))} exceeds entry quantity ${esc(num(r.qty))}.`}</p>`;if(sameQty)h+=`<div class="tf-net-preview"><small>Fees applied: ${esc(money(r.fees))}</small><strong class="${tone(calcPnl(r))}">Estimated net ${esc(pnl(calcPnl(r)))}</strong><span class="tf-return-note">${esc(returnLabel({...r,pnl:calcPnl(r)}))} return on entry value</span></div>`;h+='</div>';$('#tfAverageReadout',el).innerHTML=h};
+ const syncOption=()=>{$('#tfOptionDetails',el).style.display=optionPricing?'grid':'none';$('#tfOption',el).checked=optionPricing;$$('[data-leg-price-label]',el).forEach(x=>x.textContent=optionPricing&&rawOptionQuotes?'Quote per share':'Price');$$('[data-leg-price]',el).forEach(x=>x.placeholder=optionPricing&&rawOptionQuotes?'1.25':'0.00')};
  const syncFees=()=>{entryFeeEach=feeDollars(v('#tfEntryFee'));exitFeeEach=feeDollars(v('#tfExitFee'));$$('[data-leg-row="entry"] [data-leg-fee]',el).forEach(x=>x.textContent='Fee '+money(entryFeeEach));$$('[data-leg-row="exit"] [data-leg-fee]',el).forEach(x=>x.textContent='Fee '+money(exitFeeEach))};
+ const captureDraft=()=>({id:savedDraft?.id||uid(),baseTradeId:t?.id||savedDraft?.baseTradeId||null,createdAt:savedDraft?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),symbol:v('#tfSym').trim().toUpperCase(),side,optionPricing,rawOptionQuotes,optionType:optionPricing?v('#tfRight'):'Call',optionStrike:optionPricing?v('#tfStrike'):'',optionExpiration:optionPricing?v('#tfExpiration'):'',entries:$$('[data-leg-row="entry"]',el).map(row=>({qty:$('[data-leg-qty]',row).value,price:$('[data-leg-price]',row).value,date:$('[data-leg-date]',row).value,clock:$('[data-leg-clock]',row).value})),exits:$$('[data-leg-row="exit"]',el).map(row=>({qty:$('[data-leg-qty]',row).value,price:$('[data-leg-price]',row).value,date:$('[data-leg-date]',row).value,clock:$('[data-leg-clock]',row).value})),entryFee:v('#tfEntryFee'),exitFee:v('#tfExitFee'),multiplier:v('#tfMult'),source:t?.source||savedDraft?.source||'Manual'});
  syncFees();preview();el.addEventListener('input',e=>{if(e.target.id==='tfEntryFee'||e.target.id==='tfExitFee')syncFees();if(e.target.id==='tfSym'&&!t){const meta=optionContractDetails(e.target.value);optionPricing=isOptionContract(e.target.value);if(meta){$('#tfRight',el).value=meta.optionType;$('#tfStrike',el).value=meta.optionStrike;$('#tfExpiration',el).value=meta.expiration}syncOption()}if(e.target.id==='tfOption'){optionPricing=e.target.checked;syncOption()}preview();$('#tfErr',el).textContent=''});
  el.addEventListener('change',e=>{if(e.target.id==='tfOption'){optionPricing=e.target.checked;syncOption();preview()}});
  el.addEventListener('focusout',e=>{if(e.target.matches('[data-leg-clock]')){const formatted=formatFillClock(e.target.value);if(formatted)e.target.value=formatted;preview()}});
@@ -2193,10 +2251,12 @@ function openTradeForm(id){
   const remove=e.target.closest('[data-leg-remove]');if(remove){const group=remove.closest('[data-leg-row]'),box=group.parentElement;if(box.children.length>1)group.remove();preview();return}
   const s=e.target.closest('[data-s]');if(s){side=s.dataset.s;$$('#tfSide button',el).forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===side));preview();return}
   const b=e.target.closest('[data-x]');if(!b)return;if(b.dataset.x==='close')return closeModal(m);
+  if(b.dataset.x==='draft'){const draft=captureDraft(),i=state.drafts.findIndex(x=>x.id===draft.id);if(i>=0)state.drafts[i]=draft;else state.drafts.push(draft);saveCore();closeModal(m);refresh();toast('Trade draft saved. You can continue it from Drafts.');return}
   const r=read(),entryRows=collect('entry'),exitRows=collect('exit'),allRows=[...entryRows,...exitRows],malformed=[...allRows].some(x=>!(x.qty>0)||!Number.isFinite(x.price)||x.price<0),missingFillDate=allRows.some(x=>!x.date),invalidFillClock=allRows.some(x=>!parseFillClock(x.clock)),missingFillTime=allRows.some(x=>!x.time),timesInvalid=!r.entry||!r.exit||exitRows.some(x=>x.time&&ts(x.time)<Math.min(...entryRows.filter(a=>a.time).map(a=>ts(a.time))))||Math.max(...exitRows.filter(x=>x.time).map(x=>ts(x.time)))<Math.max(...entryRows.filter(x=>x.time).map(x=>ts(x.time))),qtyMatch=Math.abs(r.qty-r.exitQty)<1e-9&&r.qty>0,bad=!r.symbol?'Enter an underlying ticker.':(optionPricing&&(!(r.optionStrike>0)||!r.optionType||!/^\d{4}-\d{2}-\d{2}$/.test(r.optionExpiration||'')))?'Enter the option strike, Call or Put, and expiration date.':malformed?'Each entry and exit needs a positive contract quantity and a valid price.':missingFillDate?'Add a date for every entry and exit fill.':invalidFillClock?'Enter fill times as military HHMM (for example 1430) or 24-hour HH:MM.':missingFillTime?'Check that each fill date and time is valid.':timesInvalid?'Every exit fill must happen after the first entry fill.':!qtyMatch?'Entry and exit quantities must match before saving the closed trade.':(!r.entry||!r.exit)?'Enter the first entry and final exit times.':ts(r.exit)<ts(r.entry)?'The final exit time can’t be before the first entry time.':'';
   if(bad){$('#tfErr',el).textContent=bad;return}
   r.pnl=calcPnl(r);delete r.exitQty;
   if(t){Object.assign(t,r);toast('Trade updated.')}else{state.trades.push(normTrade({...r,id:uid(),source:'Manual'}));toast('Trade added.')}
+  if(savedDraft)state.drafts=state.drafts.filter(x=>x.id!==savedDraft.id);
   saveCore();closeModal(m);refresh()
  });
  el.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();$('[data-x=save]',el).click()}})
@@ -2484,7 +2544,7 @@ function download(name,content,type='text/plain'){const url=URL.createObjectURL(
 function csvSafe(v){let s=String(v??'');if(/^\s*[=+\-@]/.test(s)&&!/^\s*-?\d+(\.\d+)?\s*$/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"'}
 function backup(){
  state.prefs.lastBackup=Date.now();saveCore();
- download('tradelab-backup-'+dayKey(Date.now())+'.json',JSON.stringify({app:'TradeLab',version:2,exportedAt:new Date().toISOString(),trades:state.trades,candles:state.candles.map(({t,...c})=>c),bt:state.bt,prefs:state.prefs}),'application/json');
+ download('tradelab-backup-'+dayKey(Date.now())+'.json',JSON.stringify({app:'TradeLab',version:2,exportedAt:new Date().toISOString(),trades:state.trades,drafts:state.drafts,candles:state.candles.map(({t,...c})=>c),bt:state.bt,prefs:state.prefs}),'application/json');
  refresh();toast('Backup downloaded. Keep the file somewhere safe.')
 }
 function exportCSV(){
@@ -2496,21 +2556,76 @@ function exportCSV(){
 async function restoreFromText(text){
  let d;try{d=JSON.parse(text)}catch{throw Error('That file isn’t a TradeLab backup (it isn’t valid JSON).')}
  if(!d||!Array.isArray(d.trades)||!Array.isArray(d.candles)||d.trades.some(t=>typeof t.symbol!=='string'||typeof t.entry!=='string')||d.candles.some(c=>typeof c.symbol!=='string'||typeof c.time!=='string'))throw Error('That file isn’t a TradeLab backup.');
- if(!(await confirmBox({title:'Replace your data with this backup?',body:`This replaces what’s in this browser with <b>${plural(d.trades.length,'trade')}</b> and <b>${plural(d.candles.length,'candle')}</b>.`,ok:'Replace my data',danger:true})))return;
+ if(!(await confirmBox({title:'Replace your data with this backup?',body:`This replaces what’s ${cloudUser?'saved to your account':'in this browser'} with <b>${plural(d.trades.length,'trade')}</b>, <b>${plural(Array.isArray(d.drafts)?d.drafts.length:0,'draft')}</b> and <b>${plural(d.candles.length,'candle')}</b>.`,ok:'Replace my data',danger:true})))return;
  stopBT();stopReplay();const th=state.prefs.theme;state=blank();adopt(d);state.candles=normCandles(d.candles);state.prefs.theme=d.prefs&&d.prefs.theme||th;
  await saveCore();await saveCandles();rpLoaded=null;imp={view:'idle'};applyTheme();refresh();toast('Backup restored.')
 }
 async function wipe(){
- if(!(await confirmBox({title:'Delete everything?',body:'This permanently removes all trades, notes and candles from this browser. Download a backup first if you might want them back.',ok:'Delete everything',danger:true})))return;
+ if(!(await confirmBox({title:'Delete everything?',body:`This permanently removes all trades, saved drafts, notes and candles ${cloudUser?'from your account and its cloud workspace':'from this browser'}. Download a backup first if you might want them back.`,ok:'Delete everything',danger:true})))return;
  stopBT();stopReplay();const th=state.prefs.theme;state=blank();state.prefs.theme=th;rpLoaded=null;imp={view:'idle'};await saveCore();await saveCandles();refresh();toast('Everything was deleted.')
 }
+/* ===================== accounts & cloud sync ===================== */
+let accountMode='signin',recoveryMode=false;
+const accountConfig=()=>window.TRADELAB_SUPABASE_CONFIG||{};
+function accountConfigured(){const c=accountConfig();return!!(c.url&&/^https:\/\//.test(c.url)&&c.publishableKey&&c.publishableKey!=='YOUR_SUPABASE_PUBLISHABLE_KEY')}
+function renderAccount(){
+ const on=!!cloudUser;$('#accountDot').classList.toggle('online',on);$('#accountLabel').textContent=on?(cloudUser.email||'Signed in'):'Account · '+(accountConfigured()?'sign in':'browser only');
+ $('#privacyText').textContent=on?'Your journal syncs to your private TradeLab account. Admins can access account workspaces.':accountConfigured()?'Your journal stays in this browser until you sign in to sync it.':'Journal data stays in this browser until cloud accounts are configured.';
+ $('#accountAuthView').hidden=on;$('#accountSignedView').hidden=!on;$('#accountSignedEmail').textContent=cloudUser?.email||'';
+ const isAdmin=cloudUser?.app_metadata?.role==='admin';$('#accountAdminBtn').hidden=!isAdmin;
+ if(!accountConfigured()){$('#accountSub').textContent='Accounts are not connected yet. Follow the setup guide in the project files.';$('#accountSubmit').disabled=true;$('#accountMode').disabled=true;$('#accountForgot').disabled=true;$('#accountMessage').textContent='Add your Supabase project URL and publishable key in the account configuration near the bottom of this HTML file.'}
+ else{$('#accountSubmit').disabled=false;$('#accountMode').disabled=false;$('#accountForgot').disabled=false;if(!cloudClient)$('#accountMessage').textContent='Connecting to the account service…'}
+}
+function openAccount(){renderAccount();$('#accountDialog').showModal()}
+function resetAccountForm(){recoveryMode=false;accountMode='signin';$('#accountEmail').required=true;$('#accountEmail').closest('label').hidden=false;$('#accountPasswordLabel').hidden=false;$('#accountNewPasswordLabel').hidden=true;$('#accountPassword').required=true;$('#accountNewPassword').required=false;$('#accountSubmit').textContent='Sign in';$('#accountMode').hidden=false;$('#accountForgot').hidden=false;$('#accountMode').textContent='Create an account';$('#accountMessage').textContent=''}
+function accountRedirect(){return location.origin+location.pathname}
+async function activateCloudUser(user){
+ if(!user)return;
+ if(cloudUser?.id===user.id&&cloudReady){cloudUser=user;renderAccount();return}
+ if(cloudActivation===user.id)return;cloudActivation=user.id;cloudReady=false;cloudUser=user;renderAccount();
+ try{
+  const{data,error}=await cloudClient.from('tradelab_workspaces').select('workspace').eq('user_id',user.id).maybeSingle();if(error)throw error;
+  const old=state,hasLocal=old.trades.length||old.drafts.length||old.candles.length;
+  if(data?.workspace&&typeof data.workspace==='object'){
+   adopt(data.workspace);state.candles=Array.isArray(data.workspace.candles)?normCandles(data.workspace.candles):[];toast('Your account journal has loaded.')
+  }else{
+   let upload=false;
+   if(hasLocal)upload=await confirmBox({title:'Save this browser’s journal to your account?',body:`This account has no cloud journal yet. Upload <b>${plural(old.trades.length,'trade')}</b>, <b>${plural(old.drafts.length,'draft')}</b> and <b>${plural(old.candles.length,'candle')}</b> from this browser?`,ok:'Upload to my account'});
+   if(upload){state=old;toast('Saving this browser’s journal to your account…')}
+   else{state=blank();state.prefs.theme=old.prefs.theme}
+   cloudReady=true;await queueCloudSave();
+  }
+  cloudReady=true;renderAccount();applyTheme();refresh();
+ }catch(e){console.error('Account sync failed',e);cloudReady=false;$('#accountMessage').textContent='Could not load your account journal: '+(e.message||'check the setup guide and try again.');toast('Could not sync your account. Your browser data is still available.')}
+ finally{cloudActivation=''}
+}
+async function initAccounts(){
+ renderAccount();if(!accountConfigured())return;
+ if(!window.supabase?.createClient){$('#accountMessage').textContent='The account library did not load. Check your connection and reload.';return}
+ const c=accountConfig();cloudClient=window.supabase.createClient(c.url,c.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const{data,error}=await cloudClient.auth.getSession();if(error)console.warn(error);if(data?.session?.user)await activateCloudUser(data.session.user);
+ cloudClient.auth.onAuthStateChange((event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){recoveryMode=true;$('#accountAuthView').hidden=false;$('#accountSignedView').hidden=true;$('#accountEmail').required=false;$('#accountEmail').closest('label').hidden=true;$('#accountPasswordLabel').hidden=true;$('#accountPassword').required=false;$('#accountNewPasswordLabel').hidden=false;$('#accountNewPassword').required=true;$('#accountSubmit').textContent='Set new password';$('#accountMode').hidden=true;$('#accountForgot').hidden=true;$('#accountMessage').textContent='Choose a new password for your account.';if(!$('#accountDialog').open)$('#accountDialog').showModal();return}
+  if(event==='SIGNED_OUT')setTimeout(async()=>{cloudUser=null;cloudReady=false;cloudActivation='';state=blank();await initStore();applyTheme();refresh();renderAccount()},0);
+  else if(session?.user)setTimeout(()=>activateCloudUser(session.user),0);
+ });
+ renderAccount()
+}
+async function loadAdminUsers(){
+ if(!cloudClient||!cloudUser||cloudUser.app_metadata?.role!=='admin')return;
+ const list=$('#adminUsers');list.innerHTML='<p class="muted small">Loading accounts…</p>';
+ const{data,error}=await cloudClient.functions.invoke('tradelab-admin',{body:{action:'list-users'}});
+ if(error||!data?.users){list.innerHTML=`<p class="neg small">${esc(error?.message||'Could not load users. Deploy the admin function from the setup guide.')}</p>`;return}
+ list.innerHTML=data.users.map(u=>`<div class="account-user"><div><strong>${esc(u.email||'No email')}${u.is_admin?' · Admin':''}</strong><div class="tiny muted">Joined ${esc(u.created_at?new Date(u.created_at).toLocaleDateString():'—')}</div></div><div class="account-actions"><button class="btn sm" data-reset-email="${esc(u.email||'')}">Send reset link</button>${u.id!==cloudUser.id?`<button class="btn sm danger" data-delete-user="${esc(u.id)}" data-delete-email="${esc(u.email||'')}" type="button">Delete account</button>`:''}</div></div>`).join('')||'<p class="muted small">No accounts found.</p>'
+}
 /* ===================== routing & render ===================== */
-const TITLES={overview:'Overview',journal:'Trade journal',replay:'Trade replay',backtest:'Practice trading',imports:'Import',calculator:'Trading calculator'};
+const TITLES={overview:'Overview',journal:'Trade journal',replay:'Trade replay',backtest:'Practice trading',imports:'Import',calculator:'Trading calculator',drafts:'Saved drafts'};
 function renderNav(){
  const n=scoped().filter(t=>!reviewed(t)).length,b=$('#navBadge');b.hidden=!n||!state.trades.length;b.textContent=n>99?'99+':n;
+ const drafts=$('#draftBadge');drafts.hidden=!state.drafts.length;drafts.textContent=state.drafts.length>99?'99+':state.drafts.length;
  $$('.nav').forEach(a=>{a.dataset.page===currentPage?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})
 }
-function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>window.dispatchEvent(new Event('tradelab-calculator-show'))};r[p]()}
+function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>window.dispatchEvent(new Event('tradelab-calculator-show')),drafts:renderDrafts};r[p]()}
 function refresh(){renderNav();renderPage(currentPage)}
 function show(p){
  stopReplay();stopBT();currentPage=p;
@@ -2522,7 +2637,7 @@ function navigate(p){if(!PAGES.includes(p))return;if(routeOf()===p&&!$('#'+p).hi
 
 /* ===================== help ===================== */
 function showHelp(){
- const rows=[['1 – 6','Switch pages'],['N','Add a trade'],['?','Show this list'],['Esc','Close a dialog'],['← →','Replay: step back / forward'],['Space','Replay or practice: play / pause'],['→','Practice: next candle'],['B / S / C','Practice: buy / sell / close position'],['Ctrl + Enter','Save while writing notes']];
+ const rows=[['1 – 7','Switch pages'],['N','Add a trade'],['?','Show this list'],['Esc','Close a dialog'],['← →','Replay: step back / forward'],['Space','Replay or practice: play / pause'],['→','Practice: next candle'],['B / S / C','Practice: buy / sell / close position'],['Ctrl + Enter','Save while writing notes']];
  const m=openModal(`<div class="panelhead"><h2>Keyboard shortcuts</h2><button class="iconbtn" data-x="close" aria-label="Close">✕</button></div>${rows.map(([k,d])=>`<div class="statline"><span>${esc(d)}</span><kbd>${esc(k)}</kbd></div>`).join('')}`,{label:'Keyboard shortcuts'});
  m.el.addEventListener('click',e=>{if(e.target.closest('[data-x]'))closeModal(m)})
 }
@@ -2531,6 +2646,8 @@ function showHelp(){
 const ACTS={
  go:a=>navigate(a),
  'add-trade':()=>openTradeForm(),
+ 'draft-open':a=>openTradeForm(null,a),
+ 'draft-delete':async a=>{const d=state.drafts.find(x=>x.id===a);if(!d)return;if(await confirmBox({title:'Delete this draft?',body:`Delete the saved form for <b>${esc(d.symbol||'Untitled trade')}</b>?`,ok:'Delete draft',danger:true})){state.drafts=state.drafts.filter(x=>x.id!==a);await saveCore();refresh();toast('Draft deleted.')}},
  sample:()=>loadSample(),'rm-sample':()=>removeSample(),
  backup,'export-csv':exportCSV,wipe,help:showHelp,
  snooze:()=>{state.prefs.snoozeBackup=Date.now()+7*DAY;saveCore();refresh()},
@@ -2555,6 +2672,30 @@ const ACTS={
  'imp-go':importTradesGo,'cd-go':importCandlesGo
 };
 function bind(){
+ $('#accountBtn').addEventListener('click',openAccount);$('#accountClose').addEventListener('click',()=>$('#accountDialog').close());
+ $('#accountDialog').addEventListener('click',e=>{if(e.target===$('#accountDialog'))$('#accountDialog').close()});
+ $('#accountMode').addEventListener('click',()=>{accountMode=accountMode==='signin'?'signup':'signin';$('#accountSubmit').textContent=accountMode==='signup'?'Create account':'Sign in';$('#accountMode').textContent=accountMode==='signup'?'I already have an account':'Create an account';$('#accountMessage').textContent='';$('#accountPassword').autocomplete=accountMode==='signup'?'new-password':'current-password'});
+ $('#accountForgot').addEventListener('click',async()=>{const email=$('#accountEmail').value.trim();if(!email){$('#accountMessage').textContent='Enter your email address first.';$('#accountEmail').focus();return}const{error}=await cloudClient.auth.resetPasswordForEmail(email,{redirectTo:accountRedirect()});$('#accountMessage').textContent=error?error.message:'If an account exists for that email, a password reset link has been sent.'});
+ $('#accountForm').addEventListener('submit',async e=>{
+  e.preventDefault();if(!cloudClient){$('#accountMessage').textContent='Account service is not connected.';return}
+  const email=$('#accountEmail').value.trim(),password=$('#accountPassword').value;$('#accountSubmit').disabled=true;$('#accountMessage').textContent='Working…';
+  try{
+   let error,data;
+   if(recoveryMode){({error}=await cloudClient.auth.updateUser({password:$('#accountNewPassword').value}));if(!error){recoveryMode=false;$('#accountMessage').textContent='Password updated. You can sign in with your new password.';resetAccountForm();$('#accountEmail').value=email} }
+   else if(accountMode==='signup'){({data,error}=await cloudClient.auth.signUp({email,password,options:{emailRedirectTo:accountRedirect()}}));if(!error)$('#accountMessage').textContent=data?.session?'Account created. Loading your journal…':'Check your email to confirm your account, then sign in.'}
+   else{({error}=await cloudClient.auth.signInWithPassword({email,password}));if(!error)$('#accountMessage').textContent='Signed in. Loading your journal…'}
+   if(error)$('#accountMessage').textContent=error.message
+  }catch(err){$('#accountMessage').textContent=err.message||'Could not complete the request.'}
+  finally{$('#accountSubmit').disabled=false}
+ });
+ $('#accountSignOut').addEventListener('click',async()=>{await flushCloudSave();const{error}=await cloudClient.auth.signOut();if(error)$('#signedMessage').textContent=error.message;else $('#accountDialog').close()});
+ $('#accountAdminBtn').addEventListener('click',()=>{$('#accountAdminView').hidden=!$('#accountAdminView').hidden;if(!$('#accountAdminView').hidden)loadAdminUsers()});
+ $('#adminRefresh').addEventListener('click',loadAdminUsers);
+ $('#adminUsers').addEventListener('click',async e=>{
+  const del=e.target.closest('[data-delete-user]');
+  if(del){const email=del.dataset.deleteEmail||'this account',userId=del.dataset.deleteUser;if(!(await confirmBox({title:'Delete this account?',body:`Permanently delete <b>${esc(email)}</b> and its saved journal, drafts and candles? This cannot be undone.`,ok:'Delete account',danger:true})))return;del.disabled=true;$('#signedMessage').textContent='Deleting account…';const{data,error}=await cloudClient.functions.invoke('tradelab-admin',{body:{action:'delete-user',userId}});if(error||!data?.ok){$('#signedMessage').textContent='Could not delete account: '+(error?.message||data?.error||'try again.');del.disabled=false;return}$('#signedMessage').textContent='Account and its saved workspace were deleted.';await loadAdminUsers();return}
+  const b=e.target.closest('[data-reset-email]');if(!b)return;const email=b.dataset.resetEmail;if(!email)return;$('#signedMessage').textContent='Sending reset link…';const{error}=await cloudClient.auth.resetPasswordForEmail(email,{redirectTo:accountRedirect()});$('#signedMessage').textContent=error?'Could not send reset link: '+error.message:'Password reset email sent to '+email+'.'
+ });
  const savedKeys=getAlpacaKeys();if(savedKeys){$('#rpApiKeyId').value=savedKeys.id||'';$('#rpDataStatus').textContent='Key saved in this browser.'}
  $('#rpSaveApi').addEventListener('click',saveAlpacaKeys);$('#rpLoadBars').addEventListener('click',()=>{const id=$('#rpApiKeyId').value.trim(),secret=$('#rpApiSecret').value.trim();if(id&&secret&&!saveAlpacaKeys())return;if(id&&secret)$('#rpDataSettings').open=true;const t=state.trades.find(x=>x.id===replayId);if(t)fetchAlpacaBars(t);else setReplayDataStatus('Choose a trade to load.')});
  document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=ACTS[el.dataset.act];if(f){e.preventDefault();f(el.dataset.arg,el,e)}});
@@ -2616,7 +2757,7 @@ function bind(){
   const k=e.key,btnLike=tag==='button'||tag==='a';
   if(k==='?'){showHelp();return}
   if(k==='n'||k==='N'){e.preventDefault();openTradeForm();return}
-  if(/^[1-6]$/.test(k)){navigate(PAGES[+k-1]);return}
+  if(/^[1-7]$/.test(k)){navigate(PAGES[+k-1]);return}
   if(currentPage==='replay'){
    if(k==='ArrowRight'){e.preventDefault();stopReplay();replayStep(1)}else if(k==='ArrowLeft'){e.preventDefault();stopReplay();replayStep(-1)}
    else if(k===' '&&!btnLike){e.preventDefault();replayToggle()}else if(k==='Home'&&rpWin&&rpWin.candles.length)replayJump(0);else if(k==='End'&&rpWin&&rpWin.candles.length)replayJump(rpWin.candles.length-1)}
@@ -2632,7 +2773,7 @@ function bind(){
 function updateCandleWizardKeepFocus(pos){updateCandleWizard();const el=$('#cdSym');if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch{}}}
 async function start(){
  await initStore();applyTheme();bind();
- const p=routeOf();if(location.hash!=='#/'+p)history.replaceState(null,'','#/'+p);show(p)
+ const p=routeOf();if(location.hash!=='#/'+p)history.replaceState(null,'','#/'+p);show(p);await initAccounts()
 }
 start();
 })();
