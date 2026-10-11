@@ -88,6 +88,17 @@ h3{font-size:14px;font-weight:700}
 .pf-good{color:var(--up)}.pf-bad{color:var(--loss)}.pf-even{color:var(--muted)}
 .kpi .s{font-size:12.5px;color:var(--muted)}
 .portfolio-snapshot{margin-bottom:16px;padding:18px}
+.tracked-plan{margin:0 0 16px;padding:16px 18px;border:1px solid var(--line2);border-radius:12px;background:var(--panel)}
+.tracked-plan-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.tracked-plan-head h2{margin:2px 0 0;font-size:17px}
+.tracked-plan-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tracked-plan-kicker{color:var(--teal);font-size:10px;font-weight:750;letter-spacing:.1em}
+.tracked-plan-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.tracked-plan-metric{min-width:0;padding:10px 12px;border-radius:9px;background:var(--panel2);text-align:center}
+.tracked-plan-metric span{display:block;color:var(--muted);font-size:11px}
+.tracked-plan-metric strong{display:block;margin-top:2px;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tracked-plan-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:11px}
+@media(max-width:620px){.tracked-plan{padding:13px}.tracked-plan-metrics{grid-template-columns:1fr}.tracked-plan-metric{display:flex;align-items:center;justify-content:space-between;text-align:left}.tracked-plan-metric strong{margin:0}}
 .portfolio-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
 .portfolio-head p{color:var(--muted);font-size:13px;margin-top:3px}
 .portfolio-start{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:600}
@@ -1777,7 +1788,7 @@ const blank=()=>({version:2,trades:[],drafts:[],candles:[],bt:{symbol:'',index:0
 let state=blank(),db=null,storageOk=true,writeQ=Promise.resolve();
 let cloudClient=null,cloudUser=null,cloudReady=false,cloudSaveTimer=null,cloudSaveWaiters=[],cloudActivation='';
 function normTrade(t){t.id=t.id||uid();t.tags=Array.isArray(t.tags)?t.tags:[];t.notes=t.notes||'';t.strategy=t.strategy||'';t.grade=t.grade||'';t.source=t.source||'Imported';t.fees=Number(t.fees)||0;t.multiplier=Number(t.multiplier)||1;t.side=t.side==='Short'?'Short':'Long';t.qty=Number(t.qty)||0;return t}
-function adopt(src){const b=blank();state.trades=(src.trades||[]).filter(t=>t&&typeof t.symbol==='string'&&t.entry).map(normTrade);state.drafts=Array.isArray(src.drafts)?src.drafts.filter(d=>d&&typeof d.id==='string'):[];state.bt={...b.bt,...(src.bt||{})};state.prefs={...b.prefs,...(src.prefs||{}),sort:{...b.prefs.sort,...((src.prefs||{}).sort||{})}};state.prefs.accountCashflows=(Array.isArray(state.prefs.accountCashflows)?state.prefs.accountCashflows:[]).filter(x=>x&&['deposit','withdrawal'].includes(x.type)&&Number(x.amount)>0&&x.date).map(x=>({id:String(x.id||uid()),type:x.type,amount:Number(x.amount),date:String(x.date),note:String(x.note||'').slice(0,100)}))}
+function adopt(src){const b=blank();state.trades=(src.trades||[]).filter(t=>t&&typeof t.symbol==='string'&&t.entry).map(normTrade);state.drafts=Array.isArray(src.drafts)?src.drafts.filter(d=>d&&typeof d.id==='string'):[];state.bt={...b.bt,...(src.bt||{})};state.prefs={...b.prefs,...(src.prefs||{}),sort:{...b.prefs.sort,...((src.prefs||{}).sort||{})}};state.prefs.accountCashflows=(Array.isArray(state.prefs.accountCashflows)?state.prefs.accountCashflows:[]).filter(x=>x&&['deposit','withdrawal'].includes(x.type)&&Number(x.amount)>0&&x.date).map(x=>({id:String(x.id||uid()),type:x.type,amount:Number(x.amount),date:String(x.date),note:String(x.note||'').slice(0,100),createdAt:String(x.createdAt||'')}))}
 function normCandles(a){for(const c of a)c.t=ts(c.time);return a}
 const idbReq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 async function initStore(){
@@ -2177,14 +2188,14 @@ function portfolioSnapshot(base){
 }
 function renderOverview(){
  const body=$('#ovBody'),acts=$('#ovActions');
- if(!state.trades.length){$('#ovSub').textContent='Welcome — let’s get your first trades in.';acts.innerHTML='';body.innerHTML=storageBanner()+portfolioSnapshot([])+welcomeHTML();return}
+ if(!state.trades.length){$('#ovSub').textContent='Welcome — let’s get your first trades in.';acts.innerHTML='';body.innerHTML=storageBanner()+portfolioSnapshot([])+trackedPlanHTML()+welcomeHTML();return}
  $('#ovSub').textContent='How your trading is going, at a glance.';
  const base=scoped(),r=state.prefs.range,from=rangeStart(r),list=base.filter(t=>t.exit&&ts(t.exit)>=from),s=computeStats(list);
  acts.innerHTML=scopeSeg()+`<div class="seg" role="group" aria-label="Time range">${[['7d','7D'],['30d','30D'],['90d','90D'],['ytd','YTD'],['all','All']].map(([v,l])=>`<button data-act="range" data-arg="${v}" aria-pressed="${r===v}">${l}</button>`).join('')}</div><button class="btn primary" data-act="add-trade">+ Add trade</button>`;
  const kpi=(l,v,sub,t='',tip='')=>`<div class="kpi"><div class="l">${l}${tip?` <span class="kpi-info" data-tip="${esc(tip)}" aria-label="${esc(tip)}" tabindex="0">i</span>`:''}</div><div class="v ${t}">${v}</div>${sub?`<div class="s">${sub}</div>`:''}</div>`;
  const pfRounded=s.pf==null||s.pf===Infinity?s.pf:Number(s.pf.toFixed(2)),pfTone=pfRounded==null?'pf-even':pfRounded>1?'pf-good':pfRounded<1?'pf-bad':'pf-even',pfValue=pfRounded==null?'—':`<div class="pf-ratio"><span class="pf-part"><strong class="pf-amount ${pfTone}">${pfRounded===Infinity?'∞':'$'+pfRounded.toFixed(2)}</strong><small>MADE</small></span><span class="pf-per">per</span><span class="pf-part"><strong class="pf-amount ${pfRounded>1?'pf-bad':pfTone}">$1</strong><small>LOST</small></span></div>`;
  const noCandles=!state.candles.length&&state.trades.some(isLive);
- body.innerHTML=storageBanner()+sampleBanner(state.trades)+backupBanner()+portfolioSnapshot(base)
+ body.innerHTML=storageBanner()+sampleBanner(state.trades)+backupBanner()+portfolioSnapshot(base)+trackedPlanHTML()
  +(noCandles?`<div class="banner"><span><b>Want to replay your trades on a chart?</b> Add price candles for the markets you trade.</span><button class="btn sm primary" data-act="go" data-arg="imports">Add candles</button></div>`:'')
  +`<div class="kpis overview-kpis">`
  +kpi('Selected range P&amp;L',esc(pnl(s.total)),plural(s.n,'closed trade'),tone(s.total))
@@ -2197,6 +2208,16 @@ function renderOverview(){
  <div class="panel mt"><div class="panelhead"><h2>What’s working</h2><div class="seg" id="brkSeg" role="group" aria-label="Group results by">${[['symbol','Symbol'],['strategy','Strategy'],['tag','Tag'],['weekday','Weekday'],['hour','Hour']].map(([v,l])=>`<button data-act="brk" data-arg="${v}" aria-pressed="${state.prefs.breakBy===v}">${l}</button>`).join('')}</div></div><div id="brkBox"></div></div>
  <div class="panel mt"><div class="panelhead"><h2>Recent trades</h2><a class="btn sm" href="#/journal">Open journal</a></div>${miniTable([...list].sort((a,b)=>ts(b.exit)-ts(a.exit)).slice(0,6))}</div>`;
  drawEquity($('#eqChart'),list);drawCalendar(base);drawBreakdown(list)
+}
+function trackedPlanSnapshot(plan,now=Date.now()){
+ if(plan.enabled===false)return{actual:Number(plan.pausedActualBalance),target:Number(plan.pausedTargetBalance),elapsed:Number(plan.pausedElapsed)||0,complete:(Number(plan.pausedElapsed)||0)>=Number(plan.totalDays||0),paused:true};
+ const today=dayKey(now),startDate=String(plan.startDate||today),elapsed=Math.max(0,Math.floor((new Date(today+'T00:00:00')-new Date(startDate+'T00:00:00'))/DAY)),day=Math.min(elapsed,Number(plan.totalDays)||0),target=Number(plan.balances[Math.min(day,plan.balances.length-1)]),startedAt=Number(plan.startedAt)||new Date(startDate+'T00:00:00').getTime(),complete=elapsed>=Number(plan.totalDays||0),endDate=dayKey(addDays(new Date(startDate+'T00:00:00'),Number(plan.totalDays)||0)),asOf=Math.min(now,new Date(endDate+'T23:59:59').getTime()),realized=state.trades.filter(t=>isLive(t)&&t.exit&&ts(t.exit)>=startedAt&&ts(t.exit)<=asOf).reduce((sum,t)=>sum+(Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t)),0),cash=(state.prefs.accountCashflows||[]).filter(x=>{const recorded=Date.parse(x.createdAt||'');return x.date<=dayKey(asOf)&&(Number.isFinite(recorded)?recorded>=startedAt:x.date>startDate)}).reduce((sum,x)=>sum+(x.type==='deposit'?1:-1)*Number(x.amount||0),0),actual=Number(plan.startingBalance||0)+realized+cash;
+ return{actual,target,elapsed:day,complete,paused:false}
+}
+function trackedPlanHTML(){
+ const plan=state.prefs.followedPlan;if(!plan||!Array.isArray(plan.balances)||!plan.balances.length)return'';
+ const p=trackedPlanSnapshot(plan);if(!Number.isFinite(p.target)||!Number.isFinite(p.actual))return'';const gap=p.actual-p.target,dayOffset=Number(plan.dayOffset)||0,totalDays=Number(plan.planLength)||Number(plan.totalDays)||0,day=Math.min(dayOffset+p.elapsed,totalDays),today=dayKey(Date.now()),startDate=String(plan.startDate||today);
+ return`<section class="tracked-plan" aria-label="Plan progress"><div class="tracked-plan-head"><div><span class="tracked-plan-kicker">${p.paused?'TRACKING PAUSED':'PLAN IN PROGRESS'}</span><h2>${esc(plan.label||'Calculator Plan')}</h2></div><div class="tracked-plan-controls"><button class="btn sm" data-act="plan-toggle">${p.paused?'Resume Tracking':'Pause Tracking'}</button><button class="btn ghost sm" data-act="plan-stop">Stop Following</button></div></div><div class="tracked-plan-metrics"><div class="tracked-plan-metric"><span>Tracked Account Value</span><strong>${esc(money(p.actual))}</strong></div><div class="tracked-plan-metric"><span>Plan Target ${p.complete?'At End':'Today'}</span><strong>${esc(money(p.target))}</strong></div><div class="tracked-plan-metric"><span>${gap>=0?'Ahead Of Plan':'Behind Plan'}</span><strong class="${tone(gap)}">${gap>=0?'+':''}${esc(money(gap))}</strong></div></div><div class="tracked-plan-foot"><span>${p.complete?'Plan complete':`Day ${day+1} of ${totalDays+1}`} · ${p.paused?'Paused':'Tracking since '+esc(dDay(startDate+'T12:00:00'))} · Ending target ${esc(money(Number(plan.finalBalance)||p.target))}</span><a href="#/calculator">View Scenarios</a></div></section>`
 }
 function drawCalendar(base=scoped()){
  const by=new Map;for(const t of base){if(!t.exit||!Number.isFinite(t.pnl))continue;const k=dayKey(t.exit),e=by.get(k)||{p:0,n:0};e.p+=t.pnl;e.n++;by.set(k,e)}
@@ -2768,7 +2789,7 @@ function renderNav(){
  const drafts=$('#journalDraftCount');drafts.hidden=!state.drafts.length;drafts.textContent=state.drafts.length>99?'99+':state.drafts.length;
  $$('.nav').forEach(a=>{a.dataset.page===currentPage||(['imports','drafts'].includes(currentPage)&&a.dataset.page==='journal')?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})
 }
-function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length,flows=accountCashflowTotals();window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance:Math.max(0,Number(state.prefs.startingBalance)||0),tradeCount:closed.length,totalPnl,wins,netTransfers:flows.net,deposits:flows.deposits,withdrawals:flows.withdrawals}}))},drafts:renderDrafts};r[p]()}
+function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length,flows=accountCashflowTotals(),startingBalance=Math.max(0,Number(state.prefs.startingBalance)||0);window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance,currentBalance:startingBalance+totalPnl+flows.net,followedPlanId:state.prefs.followedPlan?.id||'',tradeCount:closed.length,totalPnl,wins,netTransfers:flows.net,deposits:flows.deposits,withdrawals:flows.withdrawals}}))},drafts:renderDrafts};r[p]()}
 function refresh(){renderNav();renderPage(currentPage)}
 function show(p){
  stopReplay();stopBT();currentPage=p;
@@ -2807,8 +2828,10 @@ const ACTS={
  more:()=>{jLimit+=50;renderJournalList()},
  'review-next':()=>{const l=journalList().find(t=>!reviewed(t))||scoped().find(t=>!reviewed(t));l?openDetail(l.id):toast('Everything is reviewed.')},
  'account-flow-open':openAccountActivity,
- 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note});await saveCore();closeModal();renderOverview();toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
+ 'account-flow-add':async()=>{const type=$('#accountFlowType').value,rawAmount=Number($('#accountFlowAmount').value),amount=Math.round(rawAmount*100)/100,date=$('#accountFlowDate').value,note=$('#accountFlowNote').value.trim().slice(0,100);if(!['deposit','withdrawal'].includes(type)||!(amount>0)||!Number.isFinite(amount)){toast('Enter an amount greater than zero.');$('#accountFlowAmount').focus();return}if(!date||date>dayKey(Date.now())){toast('Choose a date up to today.');$('#accountFlowDate').focus();return}state.prefs.accountCashflows.push({id:uid(),type,amount,date,note,createdAt:new Date().toISOString()});await saveCore();closeModal();renderOverview();toast(`${type==='deposit'?'Deposit':'Withdrawal'} added to account activity.`)},
  'account-flow-delete':async a=>{const rows=state.prefs.accountCashflows||[];if(!rows.some(x=>x.id===a))return;state.prefs.accountCashflows=rows.filter(x=>x.id!==a);await saveCore();closeModal();renderOverview();toast('Account transfer removed.')},
+ 'plan-toggle':async()=>{const p=state.prefs.followedPlan;if(!p)return;const now=Date.now();if(p.enabled!==false){const snap=trackedPlanSnapshot(p,now);p.enabled=false;p.pausedAt=now;p.pausedActualBalance=snap.actual;p.pausedTargetBalance=snap.target;p.pausedElapsed=snap.elapsed}else{const pausedAt=Number(p.pausedAt)||now,pausedDate=dayKey(pausedAt),configured=Number(state.prefs.startingBalance)||0,closed=state.trades.filter(t=>isLive(t)&&t.exit),pnlOf=t=>Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t),flows=accountCashflowTotals(),afterPause=closed.filter(t=>ts(t.exit)>=pausedAt&&ts(t.exit)<=now).reduce((sum,t)=>sum+pnlOf(t),0),flowsAfterPause=(state.prefs.accountCashflows||[]).filter(x=>{const recorded=Date.parse(x.createdAt||'');return Number.isFinite(recorded)?recorded>=pausedAt:x.date>pausedDate}).reduce((sum,x)=>sum+(x.type==='deposit'?1:-1)*Number(x.amount||0),0),current=configured>0?configured+closed.reduce((sum,t)=>sum+pnlOf(t),0)+flows.net:Number(p.pausedActualBalance||0)+afterPause+flowsAfterPause,next=Math.min(Number(p.pausedElapsed||0),Number(p.totalDays)||0);p.balances=p.balances.slice(next);if(!p.balances.length)p.balances=[Number(p.pausedTargetBalance)||current];p.dayOffset=(Number(p.dayOffset)||0)+next;p.totalDays=p.balances.length-1;p.startingBalance=Math.max(0,current);p.startedAt=now;p.startDate=dayKey(now);p.enabled=true;p.finalBalance=Number(p.balances[p.balances.length-1])||0;delete p.pausedAt;delete p.pausedActualBalance;delete p.pausedTargetBalance;delete p.pausedElapsed}await saveCore();renderOverview();toast(p.enabled?'Plan tracking resumed.':'Plan tracking paused.')},
+ 'plan-stop':async()=>{if(!state.prefs.followedPlan)return;state.prefs.followedPlan=null;await saveCore();renderOverview();toast('Plan tracking stopped.')},
  'del-selected':async()=>{const ids=[...sel];if(ids.length&&await confirmBox({title:`Delete ${plural(ids.length,'trade')}?`,body:'You can undo right after.',ok:'Delete',danger:true}))deleteTrades(ids)},
  'del-all-trades':async()=>{const ids=state.trades.map(t=>t.id);if(!ids.length)return;if(await confirmBox({title:'Delete all trades?',body:`This removes all ${plural(ids.length,'trade')} and their notes from the journal. You can undo right after.`,ok:'Delete all trades',danger:true}))deleteTrades(ids)},
  'clear-sel':()=>{sel.clear();renderJournalList()},
@@ -2818,6 +2841,7 @@ const ACTS={
  'imp-go':importTradesGo,'cd-go':importCandlesGo
 };
 function bind(){
+ window.addEventListener('tradelab-follow-plan',async e=>{const p=e.detail;if(!p||!p.id||!Array.isArray(p.balances)||!p.balances.length)return;const balances=p.balances.slice(0,36501).map(Number).filter(Number.isFinite);if(!balances.length)return;state.prefs.followedPlan={id:String(p.id),label:String(p.label||'Calculator Plan').slice(0,80),startedAt:Number(p.startedAt)||Date.now(),startDate:String(p.startDate||dayKey(Date.now())),startingBalance:Math.max(0,Number(p.startingBalance)||0),totalDays:Math.min(Math.max(0,Number(p.totalDays)||0),balances.length-1),planLength:Math.max(0,Number(p.planLength)||Number(p.totalDays)||0),dayOffset:Math.max(0,Number(p.dayOffset)||0),enabled:p.enabled!==false,balances,finalBalance:Number(p.finalBalance)||balances[balances.length-1]};await saveCore();renderOverview();toast('Plan is now being tracked on Overview.')});
  $('#accountBtn').addEventListener('click',openAccount);$('#accountClose').addEventListener('click',()=>$('#accountDialog').close());
  $('#accountDialog').addEventListener('click',e=>{if(e.target===$('#accountDialog'))$('#accountDialog').close()});
  $('#accountMode').addEventListener('click',()=>{accountMode=accountMode==='signin'?'signup':'signin';$('#accountSubmit').textContent=accountMode==='signup'?'Create account':'Sign in';$('#accountMode').textContent=accountMode==='signup'?'I already have an account':'Create an account';$('#accountMessage').textContent='';$('#accountPassword').autocomplete=accountMode==='signup'?'new-password':'current-password'});
@@ -2920,7 +2944,7 @@ function updateCandleWizardKeepFocus(pos){updateCandleWizard();const el=$('#cdSy
 async function start(){
  syncMobileChrome();window.addEventListener('resize',syncMobileChrome,{passive:true});
  await initStore();applyTheme();bind();
- const p=routeOf();if(location.hash!=='#/'+p)history.replaceState(null,'','#/'+p);show(p);await initAccounts()
+ const p=routeOf();if(location.hash!=='#/'+p)history.replaceState(null,'','#/'+p);show(p);await initAccounts();let trackedDay=dayKey(Date.now());setInterval(()=>{const today=dayKey(Date.now());if(today!==trackedDay){trackedDay=today;if(currentPage==='overview'&&state.prefs.followedPlan?.enabled!==false)renderOverview()}},60000)
 }
 start();
 })();
@@ -2929,7 +2953,7 @@ start();
 
 const calcRoot=document.getElementById('tradelab-calc-page');
 const cEl=id=>document.getElementById('tlc-'+id);
-let _actualProgress={startingBalance:0,tradeCount:0,totalPnl:0,wins:0,netTransfers:0,deposits:0,withdrawals:0};
+let _actualProgress={startingBalance:0,currentBalance:0,followedPlanId:'',tradeCount:0,totalPnl:0,wins:0,netTransfers:0,deposits:0,withdrawals:0};
 const _scenarios=[];
 let _scColorIdx=0;
 const _scColors=['var(--gold)','var(--green)','var(--blue)','var(--purple)'];
@@ -3584,6 +3608,14 @@ cEl('btnSaveGoal').addEventListener('click', saveCurrentProjectionAsGoal);
 function clearScenarios() { _scenarios.length = 0; _scColorIdx = 0; renderScenarios(); }
 function removeScenario(idx) { _scenarios.splice(idx, 1); renderScenarios(); }
 
+function followScenario(idx){
+  const sc=_scenarios[idx];if(!sc)return;
+  const today=formatDateInputValue(new Date()),hasAccount=Number(_actualProgress.startingBalance)>0,res=simulate(sc.params,{captureBalances:true}),allBalances=(res.planBalances||[Number(sc.params.principal)||0]).slice(0,36501),maxDay=Math.max(1,allBalances.length),requested=Number(document.getElementById('sc-follow-day-'+idx)?.value)||1,offset=Math.max(0,Math.min(maxDay-1,Math.floor(requested)-1)),balances=allBalances.slice(offset);
+  const startingBalance=hasAccount&&Number(_actualProgress.currentBalance)>0?Number(_actualProgress.currentBalance):Number(balances[0])||0;
+  const plan={id:'plan-'+Date.now().toString(36),label:sc.label,startedAt:Date.now(),startDate:today,startingBalance,totalDays:balances.length-1,planLength:allBalances.length-1,dayOffset:offset,enabled:true,balances,finalBalance:balances[balances.length-1]};
+  window.dispatchEvent(new CustomEvent('tradelab-follow-plan',{detail:plan}));
+}
+
 
 function describeScenarioCashFlow(params, kind) {
   const isContrib = kind === 'contrib';
@@ -3621,7 +3653,7 @@ function renderScenarios() {
     return `<div class="scenario-card">
       <div class="scenario-card-header">
         <span class="scenario-name" style="color:${sc.color}">${sc.label}</span>
-        <button class="btn btn-ghost btn-sm" onclick="removeScenario(${idx})">✕</button>
+        <div class="scenario-follow-controls"><label>Start From Day <input id="sc-follow-day-${idx}" type="number" min="1" max="${Math.min(sc.res.totalDays+1,36501)}" step="1" value="1" aria-label="Start Following From Day"></label><button class="btn btn-sm" onclick="followScenario(${idx})">Follow This Plan</button><button class="btn btn-ghost btn-sm" aria-label="Remove ${sc.label}" onclick="removeScenario(${idx})">✕</button></div>
       </div>
       <div class="scenario-body">
         <div class="scenario-row"><span class="s-label">Principal</span><span class="s-val">${fmtCurrency(sc.params.principal)}</span></div>
@@ -3708,7 +3740,7 @@ function buildRandomSchedule(params, options) {
 }
 function buildRandomRedSchedule(params) { return buildRandomSchedule(params, { enabled: params.randomRedEnabled, count: params.randomRedCount, avg: params.randomRedAvg, spread: params.randomRedVariance, seed: params.randomRedSeed }); }
 function buildRandomGreenSchedule(params, randomRedSchedule = new Map()) { return buildRandomSchedule(params, { enabled: params.randomGreenEnabled, count: params.randomGreenCount, avg: params.randomGreenAvg, spread: params.randomGreenVariance, seed: params.randomGreenSeed, excludeDays: new Set(randomRedSchedule.keys()) }); }
-function simulate(p) {
+function simulate(p, options = {}) {
   const { principal, dailyRate, totalDays, activeDays, startDate,
           contribEnabled, contribFreqDays, contribIsFixed, contribFixed, contribPct,
           withdrawEnabled, withdrawFreqDays, withdrawIsFixed, withdrawFixed, withdrawPct,
@@ -3725,7 +3757,7 @@ function simulate(p) {
   const MAX_PTS = 500;
   const TABLE_CAP = 3650;
   const chartStep = Math.max(1, Math.ceil(totalDays / MAX_PTS));
-  const tableRows = [], chartLabels = [], chartBalances = [];
+  const tableRows = [], chartLabels = [], chartBalances = [], planBalances = options.captureBalances ? [] : null;
 
   for (let day = 0; day <= totalDays; day++) {
     if (day > 0 && (day - 1) % 7 === 0) weekBase = balance;
@@ -3766,6 +3798,7 @@ function simulate(p) {
       chartLabels.push(day);
       chartBalances.push(+balance.toFixed(2));
     }
+    if (planBalances) planBalances.push(+balance.toFixed(2));
     if (day <= TABLE_CAP) tableRows.push({
       day,
       balance: +balance.toFixed(2),
@@ -3785,7 +3818,8 @@ function simulate(p) {
 
   return { finalBalance, totalProfitLoss, totalContributions, totalWithdrawals,
            netReturnPct, avgDailyEarnings, chartLabels, chartBalances, tableRows, totalDays,
-           randomRedCountApplied, randomRedAvgApplied, randomGreenCountApplied, randomGreenAvgApplied };
+           randomRedCountApplied, randomRedAvgApplied, randomGreenCountApplied, randomGreenAvgApplied,
+           ...(planBalances ? { planBalances } : {}) };
 }
 
 function getCalcInputs() {
@@ -4111,6 +4145,9 @@ cEl('btnReset')?.addEventListener('click', () => {
 .page :is(.panel,.card) textarea::placeholder {
   text-transform: none;
 }
+#tradelab-calc-page .scenario-follow-controls{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap}
+#tradelab-calc-page .scenario-follow-controls label{display:grid;gap:3px;color:var(--muted);font-size:10px;font-weight:650}
+#tradelab-calc-page .scenario-follow-controls input{width:88px;min-height:34px;padding:5px 8px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);color:var(--ink);font-size:12px;text-transform:none}
 </style>
 
 </body>
