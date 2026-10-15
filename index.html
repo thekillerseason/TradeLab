@@ -48,6 +48,17 @@ h3{font-size:14px;font-weight:700}
 .nav .nav-icon-fill{fill:url(#tradelab-nav-gradient);stroke:none}
 .nav[aria-current=page] svg,.nav:hover svg{filter:drop-shadow(0 0 5px rgba(0,229,184,.68))}
 .nav-defs{position:absolute;width:0;height:0;overflow:hidden}
+.resource-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.resource-card{display:flex;flex-direction:column;align-items:flex-start;min-height:205px;padding:20px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.resource-card:first-child{border-color:color-mix(in srgb,var(--brand-secondary) 42%,var(--line))}
+.resource-tag{display:inline-flex;align-items:center;gap:7px;color:var(--teal);font-size:11px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+.resource-card h2{margin-top:12px;font-size:19px}
+.resource-card p{margin-top:7px;color:var(--muted);font-size:13.5px;line-height:1.55}
+.resource-link{display:inline-flex;align-items:center;gap:7px;margin-top:auto;padding-top:18px;color:var(--teal);font-size:13px;font-weight:700;text-decoration:none}
+.resource-link:hover{text-decoration:underline;text-underline-offset:3px}
+.resource-link svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:900px){.resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.resource-grid{grid-template-columns:1fr}.resource-card{min-height:180px}}
 .badge{margin-left:auto;background:var(--brand-primary);color:#06221d;border-radius:20px;font-size:11px;font-weight:800;padding:1px 8px}
 .sidefoot{margin-top:auto;display:grid;gap:8px;border-top:1px solid #243649;padding-top:14px}
 .sidebtn{display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--nav-ink);padding:8px 12px;border-radius:9px;text-align:left;font-size:13.5px}
@@ -439,6 +450,7 @@ td.pnl{font-weight:700}
   <a class="nav" href="#/replay" data-page="replay"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.2 5v14"/><path class="nav-icon-fill" d="M10 6.2c0-1.2 1.3-1.9 2.3-1.2l8.1 5.6a1.7 1.7 0 0 1 0 2.8l-8.1 5.6c-1 .7-2.3 0-2.3-1.2V6.2Z"/></svg>Replay</a>
   <a class="nav" href="#/backtest" data-page="backtest"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 19h18M4 16.5l5.2-5.2 3.6 3.5 7-8"/><path d="M15.2 6.8h4.6v4.6"/></svg>Practice</a>
   <a class="nav" href="#/calculator" data-page="calculator"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="2.5" width="17" height="19" rx="3"/><rect x="7" y="7" width="2.5" height="1.7" rx=".8"/><rect x="14.5" y="7" width="2.5" height="1.7" rx=".8"/><rect x="7" y="11.4" width="2.5" height="1.7" rx=".8"/><rect x="14.5" y="11.4" width="2.5" height="1.7" rx=".8"/><rect x="7" y="15.8" width="2.5" height="1.7" rx=".8"/><rect x="14.5" y="15.8" width="2.5" height="1.7" rx=".8"/></svg>Calculator</a>
+  <a class="nav" href="#/resources" data-page="resources"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13 4h7v7M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>Resources</a>
  </nav>
  <div class="sidefoot">
   <button class="account-btn" id="accountBtn" type="button"><span class="account-dot" id="accountDot"></span><span id="accountLabel">Account · browser only</span></button>
@@ -804,6 +816,30 @@ td.pnl{font-weight:700}
   <!-- ==============================================================
        PAGE 2: TRADE LOGGER
        ============================================================== -->
+</section>
+
+<section class="page" id="resources" hidden>
+ <header class="pagehead"><div><h1>Resources</h1><p class="sub">Useful destinations for market news, economic events, options flow, and dark pool activity.</p></div></header>
+ <div class="resource-grid">
+  <article class="resource-card">
+   <span class="resource-tag">Options Flow &amp; Dark Pool</span>
+   <h2>FlowMS</h2>
+   <p>Explore options flow and dark pool activity to add context to your market research.</p>
+   <a class="resource-link" href="https://flowms.com/" target="_blank" rel="noopener noreferrer">Visit FlowMS <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h7v7M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg></a>
+  </article>
+  <article class="resource-card">
+   <span class="resource-tag">Stock News</span>
+   <h2>Benzinga</h2>
+   <p>Read company and market news that may affect the stocks you follow.</p>
+   <a class="resource-link" href="https://www.benzinga.com/" target="_blank" rel="noopener noreferrer">Visit Benzinga <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h7v7M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg></a>
+  </article>
+  <article class="resource-card">
+   <span class="resource-tag">Economic Calendar</span>
+   <h2>Forex Factory</h2>
+   <p>Check the economic calendar for upcoming releases and scheduled market events.</p>
+   <a class="resource-link" href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener noreferrer">Open Calendar <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h7v7M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg></a>
+  </article>
+ </div>
 </section>
 
 <section class="page" id="overview" hidden>
@@ -2107,7 +2143,7 @@ function drawCandles(el,series,end,o={}){
 }
 /* ===================== shared bits ===================== */
 let currentPage='overview';
-const PAGES=['overview','journal','replay','backtest','imports','calculator','drafts'];
+const PAGES=['overview','journal','replay','backtest','imports','calculator','drafts','resources'];
 const ICON={upload:'<svg viewBox="0 0 24 24"><path d="M12 15V3m-4 4 4-4 4 4M4 17v3h16v-3"/></svg>',pen:'<svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',spark:'<svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>'};
 function scopeSeg(){
  if(!(state.trades.some(isLive)&&state.trades.some(t=>!isLive(t))))return'';
@@ -2783,13 +2819,13 @@ async function loadAdminUsers(){
  list.innerHTML=data.users.map(u=>`<div class="account-user"><div><strong>${esc(u.email||'No email')}${u.is_admin?' · Admin':''}</strong><div class="tiny muted">Joined ${esc(u.created_at?new Date(u.created_at).toLocaleDateString():'—')}</div></div><div class="account-actions"><button class="btn sm" data-reset-email="${esc(u.email||'')}">Send reset link</button>${u.id!==cloudUser.id?`<button class="btn sm danger" data-delete-user="${esc(u.id)}" data-delete-email="${esc(u.email||'')}" type="button">Delete account</button>`:''}</div></div>`).join('')||'<p class="muted small">No accounts found.</p>'
 }
 /* ===================== routing & render ===================== */
-const TITLES={overview:'Overview',journal:'Trade journal',replay:'Trade replay',backtest:'Practice trading',imports:'Import',calculator:'Trading calculator',drafts:'Saved drafts'};
+const TITLES={overview:'Overview',journal:'Trade journal',replay:'Trade replay',backtest:'Practice trading',imports:'Import',calculator:'Trading calculator',drafts:'Saved drafts',resources:'Resources'};
 function renderNav(){
  const n=scoped().filter(t=>!reviewed(t)).length,b=$('#navBadge');b.hidden=!n||!state.trades.length;b.textContent=n>99?'99+':n;
  const drafts=$('#journalDraftCount');drafts.hidden=!state.drafts.length;drafts.textContent=state.drafts.length>99?'99+':state.drafts.length;
  $$('.nav').forEach(a=>{a.dataset.page===currentPage||(['imports','drafts'].includes(currentPage)&&a.dataset.page==='journal')?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})
 }
-function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length,flows=accountCashflowTotals(),startingBalance=Math.max(0,Number(state.prefs.startingBalance)||0);window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance,currentBalance:startingBalance+totalPnl+flows.net,followedPlanId:state.prefs.followedPlan?.id||'',tradeCount:closed.length,totalPnl,wins,netTransfers:flows.net,deposits:flows.deposits,withdrawals:flows.withdrawals}}))},drafts:renderDrafts};r[p]()}
+function renderPage(p){const r={overview:renderOverview,journal:renderJournal,replay:renderReplay,backtest:renderBT,imports:renderImport,calculator:()=>{const closed=state.trades.filter(t=>isLive(t)&&t.exit);const pnlOf=t=>t.pnl!=null&&t.pnl!==''&&Number.isFinite(Number(t.pnl))?Number(t.pnl):calcPnl(t);const totalPnl=closed.reduce((sum,t)=>sum+pnlOf(t),0),wins=closed.filter(t=>pnlOf(t)>0).length,flows=accountCashflowTotals(),startingBalance=Math.max(0,Number(state.prefs.startingBalance)||0);window.dispatchEvent(new CustomEvent('tradelab-calculator-show',{detail:{startingBalance,currentBalance:startingBalance+totalPnl+flows.net,followedPlanId:state.prefs.followedPlan?.id||'',tradeCount:closed.length,totalPnl,wins,netTransfers:flows.net,deposits:flows.deposits,withdrawals:flows.withdrawals}}))},drafts:renderDrafts,resources:()=>{}};r[p]()}
 function refresh(){renderNav();renderPage(currentPage)}
 function show(p){
  stopReplay();stopBT();currentPage=p;
