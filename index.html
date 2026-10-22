@@ -3651,6 +3651,30 @@ function onCalcInput() {
   _calcDebounce = setTimeout(runCalc, 180);
 }
 
+// Keep calculator results live even if an inline field handler is skipped by
+// the browser or the field is added/replaced after the page has initialized.
+if (calcRoot && !calcRoot.dataset.liveRefreshBound) {
+  calcRoot.dataset.liveRefreshBound = '1';
+  const queueCalcRefresh = () => {
+    try { updatePctBar(); } catch (err) { console.warn('Calculator badge refresh failed.', err); }
+    try { updateTimelinePreview(); } catch (err) { console.warn('Calculator timeline refresh failed.', err); }
+    clearTimeout(_calcDebounce);
+    _calcDebounce = setTimeout(() => {
+      try { runCalc(); }
+      catch (err) {
+        console.error('Calculator projection failed to update.', err);
+        showToast('The projection could not update. Check the entered values and try again.');
+      }
+    }, 180);
+  };
+  calcRoot.addEventListener('input', event => {
+    if (event.target?.matches?.('input:not([type="checkbox"]):not([type="hidden"]):not([type="button"]), select')) queueCalcRefresh();
+  });
+  calcRoot.addEventListener('change', event => {
+    if (event.target?.matches?.('input[type="checkbox"], select')) queueCalcRefresh();
+  });
+}
+
 function runCalc() {
   const params = getCalcInputs();
   if (!params) return;
