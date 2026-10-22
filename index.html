@@ -666,7 +666,7 @@ td.pnl{font-weight:700}
             </div>
 
             <details class="tlc-optional-settings">
-              <summary><span><strong>Add deposits or withdrawals</strong><small>Optional recurring cash flows</small></span><span class="tlc-disclosure">⌄</span></summary>
+              <summary><span><strong>Add deposits or withdrawals</strong><small>Recurring or one-time cash flows</small></span><span class="tlc-disclosure">⌄</span></summary>
             <!-- Contributions -->
             <div class="section-label">Recurring Contributions</div>
             <div class="toggle-row">
@@ -747,6 +747,24 @@ td.pnl{font-weight:700}
                 <div class="error-msg" id="tlc-err-withdraw">Must be a positive number.</div>
               </div>
             </div>
+
+            <section class="tlc-one-time-section" aria-labelledby="tlc-deposit-title">
+              <div class="tlc-one-time-section-head">
+                <div class="tlc-one-time-heading"><h3 id="tlc-deposit-title">One-Time Deposits</h3><p class="tlc-flow-hint">Choose dates within this projection. Add as many deposits as you need.</p></div>
+                <button class="btn btn-ghost btn-sm" id="tlc-addOneTimeDeposit" type="button">＋ Add Deposit</button>
+              </div>
+              <div class="tlc-one-time-list" id="tlc-oneTimeDepositList" aria-live="polite"></div>
+              <p class="tlc-one-time-range" id="tlc-oneTimeDepositRange">Dates follow your projection period.</p>
+            </section>
+
+            <section class="tlc-one-time-section" aria-labelledby="tlc-withdrawal-title">
+              <div class="tlc-one-time-section-head">
+                <div class="tlc-one-time-heading"><h3 id="tlc-withdrawal-title">One-Time Withdrawals</h3><p class="tlc-flow-hint">Choose dates within this projection. Withdrawals are capped at that day’s available balance.</p></div>
+                <button class="btn btn-ghost btn-sm" id="tlc-addOneTimeWithdrawal" type="button">＋ Add Withdrawal</button>
+              </div>
+              <div class="tlc-one-time-list" id="tlc-oneTimeWithdrawalList" aria-live="polite"></div>
+              <p class="tlc-one-time-range" id="tlc-oneTimeWithdrawalRange">Dates follow your projection period.</p>
+            </section>
 
             </details>
           </div><!-- /card-body -->
@@ -3165,7 +3183,110 @@ function countTradingDaysBetween(startDate, endDate, activeDays) {
   return count;
 }
 
+function getOneTimeFlowList(type) {
+  return cEl(type === 'deposit' ? 'oneTimeDepositList' : 'oneTimeWithdrawalList');
+}
+
+function getOneTimeFlowRange() {
+  const startValue = cEl('startDate')?.value;
+  const period = parseFloat(cEl('timePeriod')?.value);
+  const unit = cEl('timeUnit')?.value;
+  if (!startValue || !Number.isFinite(period) || period <= 0) return null;
+  const startDate = new Date(startValue + 'T00:00:00');
+  if (isNaN(startDate)) return null;
+  const calendarDaysPerUnit = { days: 1, weeks: 7, months: 30, years: 365 }[unit] || 1;
+  const calendarDays = Math.round(period * calendarDaysPerUnit);
+  if (calendarDays < 1) return null;
+  const endDate = addDays(startDate, calendarDays);
+  return { min: startValue, max: formatDateInputValue(endDate), startDate, endDate };
+}
+
+function updateOneTimeDateBounds() {
+  const range = getOneTimeFlowRange();
+  ['deposit', 'withdrawal'].forEach(type => {
+    const list = getOneTimeFlowList(type);
+    if (!list) return;
+    const rangeLabel = cEl(type === 'deposit' ? 'oneTimeDepositRange' : 'oneTimeWithdrawalRange');
+    if (range) {
+      const label = `${formatLongDate(range.startDate)} – ${formatLongDate(range.endDate)}`;
+      if (rangeLabel) rangeLabel.textContent = label;
+      list.querySelectorAll('[data-flow-date]').forEach(input => {
+        input.min = range.min;
+        input.max = range.max;
+      });
+    } else {
+      if (rangeLabel) rangeLabel.textContent = 'Enter a valid projection period to choose dates.';
+      list.querySelectorAll('[data-flow-date]').forEach(input => {
+        input.removeAttribute('min');
+        input.removeAttribute('max');
+      });
+    }
+  });
+}
+
+function refreshOneTimeFlowEmptyState(type) {
+  const list = getOneTimeFlowList(type);
+  if (!list) return;
+  const rows = list.querySelectorAll('.tlc-one-time-row');
+  let empty = list.querySelector('.tlc-flow-empty');
+  if (rows.length && empty) empty.remove();
+  if (!rows.length && !empty) {
+    empty = document.createElement('div');
+    empty.className = 'tlc-flow-empty';
+    empty.textContent = type === 'deposit' ? 'No one-time deposits added.' : 'No one-time withdrawals added.';
+    list.appendChild(empty);
+  }
+}
+
+function addOneTimeFlow(type) {
+  if (type !== 'deposit' && type !== 'withdrawal') return;
+  const list = getOneTimeFlowList(type);
+  if (!list) return;
+  list.querySelector('.tlc-flow-empty')?.remove();
+  const label = type === 'deposit' ? 'Deposit' : 'Withdrawal';
+  const rowId = `tlc-one-time-${type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  const date = cEl('startDate')?.value || '';
+  list.insertAdjacentHTML('beforeend', `<div class="tlc-one-time-row" data-flow-row>
+    <label class="tlc-one-time-field"><span>Date</span><input type="date" id="${rowId}-date" data-flow-date value="${date}" aria-label="${label} Date" /></label>
+    <label class="tlc-one-time-field"><span>Amount</span><span class="tlc-one-time-amount"><span>$</span><input type="number" id="${rowId}-amount" data-flow-amount min="0.01" step="0.01" placeholder="250" aria-label="${label} Amount" /></span></label>
+    <button class="btn btn-ghost btn-sm tlc-remove-flow" type="button" data-remove-one-time-flow aria-label="Remove ${label}">Remove</button>
+    <small class="tlc-flow-error" hidden>Add a positive amount and choose a date within the selected time period.</small>
+  </div>`);
+  updateOneTimeDateBounds();
+  refreshOneTimeFlowEmptyState(type);
+  list.querySelector('.tlc-one-time-row:last-child [data-flow-amount]')?.focus();
+  onCalcInput();
+}
+
+function readOneTimeFlows(type, range) {
+  const list = getOneTimeFlowList(type);
+  const flows = [];
+  let valid = true;
+  if (!list) return { flows, valid };
+  list.querySelectorAll('.tlc-one-time-row').forEach(row => {
+    const dateInput = row.querySelector('[data-flow-date]');
+    const amountInput = row.querySelector('[data-flow-amount]');
+    const date = dateInput?.value || '';
+    const amount = Number.parseFloat(amountInput?.value || '');
+    const amountValid = Number.isFinite(amount) && amount > 0;
+    const dateValid = !!(range && date && date >= range.min && date <= range.max);
+    const rowValid = amountValid && dateValid;
+    row.classList.toggle('is-invalid', !rowValid);
+    if (dateInput) dateInput.classList.toggle('is-invalid', !dateValid);
+    if (amountInput) amountInput.classList.toggle('is-invalid', !amountValid);
+    const error = row.querySelector('.tlc-flow-error');
+    if (error) {
+      error.hidden = rowValid;
+      error.textContent = amountValid ? 'Choose a date within the selected time period.' : 'Enter a positive amount and choose a date within the selected time period.';
+    }
+    if (!rowValid) valid = false;
+    else flows.push({ date, amount });
+  });
+  return { flows, valid };
+}
+
 function updateTimelinePreview() {
+  updateOneTimeDateBounds();
   const startValue = cEl('startDate')?.value;
   const period = parseFloat(cEl('timePeriod')?.value);
   const unit = cEl('timeUnit')?.value;
@@ -3397,7 +3518,7 @@ function renderSummary(res, params) {
       <div class="stat-icon">⬇</div>
       <div class="stat-label">Total Withdrawals</div>
       <div class="stat-value">${fmtCurrency(res.totalWithdrawals)}</div>
-      <div class="stat-sub">From weekly profit only</div>
+      <div class="stat-sub">Recurring withdrawals use weekly profit only</div>
     </div>
     <div class="stat-card purple">
       <div class="stat-icon">📅</div>
@@ -3718,12 +3839,13 @@ cEl('btnExportCSV').addEventListener('click', () => {
   if (!params) { showToast('⚠️ Fix validation errors first.'); return; }
   const res   = simulate(params);
   const start = res.tableRows[0]?.balance ?? 0;
-  const hdr   = ['Day', 'Balance', 'Change vs Prior', 'Change vs Start (%)'].join(',');
+  const hdr   = ['Date', 'Day', 'Balance', 'Change vs Prior', 'Change vs Start (%)', 'One-Time Deposits', 'One-Time Withdrawals'].join(',');
   const rows  = res.tableRows.map((r, i) => {
     const prev  = i > 0 ? res.tableRows[i - 1].balance : r.balance;
     const chg   = r.balance - prev;
     const totPc = start > 0 ? ((r.balance - start) / start * 100).toFixed(4) : '0';
-    return [r.day, r.balance.toFixed(2), i === 0 ? '0' : chg.toFixed(2), totPc].join(',');
+    const date = formatDateInputValue(addDays(params.startDate, r.day));
+    return [date, r.day, r.balance.toFixed(2), i === 0 ? '0' : chg.toFixed(2), totPc, (r.oneTimeDeposit || 0).toFixed(2), (r.oneTimeWithdrawal || 0).toFixed(2)].join(',');
   });
   const summary = [
     '', 'Summary',
@@ -3783,6 +3905,13 @@ function describeScenarioCashFlow(params, kind) {
   return isFixed ? `${fmtCurrency(fixed)} ${frequency}` : `${fmtPct(pct, 2)} of balance ${frequency}`;
 }
 
+function describeOneTimeFlows(flows) {
+  const entries = Array.isArray(flows) ? flows : [];
+  if (!entries.length) return 'None';
+  const total = entries.reduce((sum, flow) => sum + Number(flow.amount || 0), 0);
+  return `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} · ${fmtCurrency(total)}`;
+}
+
 function renderScenarios() {
   const container = cEl('scenarioCards');
   const actualBox = cEl('actualProgress');
@@ -3814,8 +3943,10 @@ function renderScenarios() {
         <div class="scenario-row"><span class="s-label">Daily Rate</span><span class="s-val ${sc.daily >= 0 ? 'pos' : 'neg'}">${fmtPct(sc.daily)}</span></div>
         <div class="scenario-row"><span class="s-label">Period</span><span class="s-val">${sc.period}</span></div>
         <div class="scenario-row"><span class="s-label">Contributions</span><span class="s-val">${describeScenarioCashFlow(sc.params, 'contrib')}</span></div>
+        <div class="scenario-row"><span class="s-label">One-Time Deposits</span><span class="s-val">${describeOneTimeFlows(sc.params.oneTimeDeposits)}</span></div>
         <div class="scenario-row"><span class="s-label">Total Added</span><span class="s-val pos">${fmtCurrency(sc.res.totalContributions)}</span></div>
         <div class="scenario-row"><span class="s-label">Withdrawals</span><span class="s-val">${describeScenarioCashFlow(sc.params, 'withdraw')}</span></div>
+        <div class="scenario-row"><span class="s-label">One-Time Withdrawals</span><span class="s-val">${describeOneTimeFlows(sc.params.oneTimeWithdrawals)}</span></div>
         <div class="scenario-row"><span class="s-label">Total Withdrawn</span><span class="s-val neg">${fmtCurrency(sc.res.totalWithdrawals)}</span></div>
         <div class="scenario-row"><span class="s-label">Final Balance</span><span class="s-val">${fmtCurrency(sc.res.finalBalance)}</span></div>
         <div class="scenario-row"><span class="s-label">Net Return</span><span class="s-val ${pos ? 'pos' : 'neg'}">${fmtPct(sc.res.netReturnPct)}</span></div>
@@ -3898,6 +4029,7 @@ function simulate(p, options = {}) {
   const { principal, dailyRate, totalDays, activeDays, startDate,
           contribEnabled, contribFreqDays, contribIsFixed, contribFixed, contribPct,
           withdrawEnabled, withdrawFreqDays, withdrawIsFixed, withdrawFixed, withdrawPct,
+          oneTimeDeposits = [], oneTimeWithdrawals = [],
           randomRedEnabled, randomGreenEnabled } = p;
 
   let balance = principal;
@@ -3907,6 +4039,10 @@ function simulate(p, options = {}) {
   let weekBase = principal;
   const randomRedSchedule = buildRandomRedSchedule(p);
   const randomGreenSchedule = buildRandomGreenSchedule(p, randomRedSchedule);
+  const oneTimeDepositSchedule = new Map();
+  const oneTimeWithdrawalSchedule = new Map();
+  oneTimeDeposits.forEach(flow => oneTimeDepositSchedule.set(flow.date, (oneTimeDepositSchedule.get(flow.date) || 0) + Number(flow.amount || 0)));
+  oneTimeWithdrawals.forEach(flow => oneTimeWithdrawalSchedule.set(flow.date, (oneTimeWithdrawalSchedule.get(flow.date) || 0) + Number(flow.amount || 0)));
 
   const MAX_PTS = 500;
   const TABLE_CAP = 3650;
@@ -3915,9 +4051,9 @@ function simulate(p, options = {}) {
 
   for (let day = 0; day <= totalDays; day++) {
     if (day > 0 && (day - 1) % 7 === 0) weekBase = balance;
+    const currentDate = startDate instanceof Date && !isNaN(startDate) ? addDays(startDate, day) : null;
 
     if (day > 0) {
-      const currentDate = startDate instanceof Date && !isNaN(startDate) ? addDays(startDate, day) : null;
       const isActiveDay = currentDate ? isActiveTradingDate(currentDate, activeDays) : activeDays.has((day - 1) % 7);
       if (isActiveDay) {
         const redLossPct = randomRedSchedule.get(day);
@@ -3932,6 +4068,21 @@ function simulate(p, options = {}) {
         if (greenGainPct) { randomGreenCountApplied++; randomGreenGainTotal += greenGainPct; }
         activeDayCount++;
       }
+    }
+
+    const dateKey = currentDate ? formatDateInputValue(currentDate) : '';
+    const oneTimeDeposit = oneTimeDepositSchedule.get(dateKey) || 0;
+    if (oneTimeDeposit > 0) {
+      balance += oneTimeDeposit;
+      totalContributions += oneTimeDeposit;
+      weekBase += oneTimeDeposit;
+    }
+    const requestedOneTimeWithdrawal = oneTimeWithdrawalSchedule.get(dateKey) || 0;
+    const oneTimeWithdrawal = Math.min(requestedOneTimeWithdrawal, Math.max(0, balance));
+    if (oneTimeWithdrawal > 0) {
+      balance = noNeg(balance - oneTimeWithdrawal);
+      totalWithdrawals += oneTimeWithdrawal;
+      weekBase = balance;
     }
 
     if (contribEnabled && day > 0 && day % contribFreqDays === 0) {
@@ -3959,7 +4110,9 @@ function simulate(p, options = {}) {
       isRandomRedDay: randomRedSchedule.has(day),
       randomRedLossPct: randomRedSchedule.get(day) || 0,
       isRandomGreenDay: randomGreenSchedule.has(day),
-      randomGreenGainPct: randomGreenSchedule.get(day) || 0
+      randomGreenGainPct: randomGreenSchedule.get(day) || 0,
+      oneTimeDeposit,
+      oneTimeWithdrawal
     });
   }
 
@@ -4049,6 +4202,10 @@ function getCalcInputs() {
     const val = withdrawType === 'fixed' ? withdrawFixed : withdrawPct * 100;
     setErr('err-withdraw', withdrawType === 'fixed' ? 'withdrawAmount' : 'withdrawPct', isNaN(val) || val < 0);
   }
+  const flowRange = getOneTimeFlowRange();
+  const oneTimeDepositsResult = readOneTimeFlows('deposit', flowRange);
+  const oneTimeWithdrawalsResult = readOneTimeFlows('withdrawal', flowRange);
+  if (!oneTimeDepositsResult.valid || !oneTimeWithdrawalsResult.valid) valid = false;
   if (!valid) return null;
 
   const requestedActiveDays = toDays(timePeriod, timeUnit, activeDays);
@@ -4079,6 +4236,8 @@ function getCalcInputs() {
     withdrawIsFixed: withdrawType === 'fixed',
     withdrawFixed: isNaN(withdrawFixed) ? 0 : withdrawFixed,
     withdrawPct: isNaN(withdrawPct) ? 0 : withdrawPct,
+    oneTimeDeposits: oneTimeDepositsResult.flows,
+    oneTimeWithdrawals: oneTimeWithdrawalsResult.flows,
   };
 }
 
@@ -4113,7 +4272,7 @@ function renderSummary(res, params) {
       <div class="stat-icon">⬇</div>
       <div class="stat-label">Total Withdrawals</div>
       <div class="stat-value">${fmtCurrency(res.totalWithdrawals)}</div>
-      <div class="stat-sub">From weekly profit only</div>
+      <div class="stat-sub">Recurring withdrawals use weekly profit only</div>
     </div>
     <div class="stat-card purple">
       <div class="stat-icon">📅</div>
@@ -4159,6 +4318,10 @@ function renderProgressionTable(res) {
     const scheduleClass = isStart ? 'is-start' : (isOn ? 'is-on' : 'is-off');
     const scheduleLabel = isStart ? 'Start' : (isOn ? 'On' : 'Off');
     const scheduleTitle = isStart ? 'Starting balance' : (isOn ? 'Included in selected active days' : 'Excluded by selected active days');
+    const notes = [];
+    if (r.isRandomRedDay) notes.push('<span class="neg">Red day ' + fmtPct(-r.randomRedLossPct, 2) + '</span>');
+    if (r.oneTimeDeposit > 0) notes.push('<span class="pos">Deposit ' + fmtCurrency(r.oneTimeDeposit) + '</span>');
+    if (r.oneTimeWithdrawal > 0) notes.push('<span class="neg">Withdrawal ' + fmtCurrency(r.oneTimeWithdrawal) + '</span>');
     html += `<tr class="projection-row ${scheduleClass}" title="${scheduleTitle}">
       <td class="projection-date">${dateLabel}</td>
       <td class="projection-day">Day ${r.day}</td>
@@ -4166,7 +4329,7 @@ function renderProgressionTable(res) {
       <td class="projection-balance">${fmtCurrency(r.balance)}</td>
       <td class="${chg >= 0 ? 'pos' : 'neg'}">${i === 0 ? '—' : fmtCurrency(chg) + ' (' + fmtPct(chgP, 3) + ')'}</td>
       <td class="${tot >= 0 ? 'pos' : 'neg'}">${fmtCurrency(tot)} (${fmtPct(totP, 2)})</td>
-      <td>${r.isRandomRedDay ? '<span class="neg">Red day ' + fmtPct(-r.randomRedLossPct, 2) + '</span>' : '—'}</td>
+      <td>${notes.join(' · ') || '—'}</td>
     </tr>`;
   }
   html += '</tbody></table></div><div class="tlc-table-hint">Swipe horizontally to see all projection columns.</div>';
@@ -4186,7 +4349,7 @@ function renderCalendarAnalysis(res, params) {
     const delta = row.balance - prev;
     const pct = prev > 0 ? (delta / prev) * 100 : 0;
     const monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
-    const entry = { date, key, day: row.day, balance: row.balance, delta, pct, isRandomRedDay: row.isRandomRedDay, randomRedLossPct: row.randomRedLossPct };
+    const entry = { date, key, day: row.day, balance: row.balance, delta, pct, isRandomRedDay: row.isRandomRedDay, randomRedLossPct: row.randomRedLossPct, oneTimeDeposit: row.oneTimeDeposit || 0, oneTimeWithdrawal: row.oneTimeWithdrawal || 0 };
     rowsByDate.set(key, entry);
     if (!monthBuckets.has(monthKey)) monthBuckets.set(monthKey, []);
     monthBuckets.get(monthKey).push(entry);
@@ -4251,7 +4414,13 @@ function renderCalendarAnalysis(res, params) {
       const isContrib = params.contribEnabled && data.day > 0 && data.day % params.contribFreqDays === 0;
       const isWithdraw = params.withdrawEnabled && data.day > 0 && data.day % params.withdrawFreqDays === 0;
       const isRandomRed = data.isRandomRedDay;
-      const eventText = isRandomRed ? `Random red ${fmtPct(-data.randomRedLossPct, 2)}` : isContrib && isWithdraw ? 'Contrib + Withdraw' : isContrib ? 'Contribution' : isWithdraw ? 'Withdrawal' : '';
+      const events = [];
+      if (isRandomRed) events.push(`Random red ${fmtPct(-data.randomRedLossPct, 2)}`);
+      if (data.oneTimeDeposit > 0) events.push(`Deposit ${fmtCurrency(data.oneTimeDeposit)}`);
+      if (data.oneTimeWithdrawal > 0) events.push(`Withdrawal ${fmtCurrency(data.oneTimeWithdrawal)}`);
+      if (isContrib) events.push('Contribution');
+      if (isWithdraw) events.push('Withdrawal');
+      const eventText = events.join(' · ');
       html += `<div class="calendar-day ${cls}" title="Day ${data.day} · Balance ${fmtCurrency(data.balance)} · Change ${fmtCurrency(data.delta)}${isRandomRed ? ' · Random red ' + fmtPct(-data.randomRedLossPct, 2) : ''}">
         <div class="cal-date"><span>${d}</span><span>D${data.day}</span></div>
         <div class="cal-balance">${fmtCurrency(data.balance)}</div>
@@ -4302,6 +4471,30 @@ cEl('btnReset')?.addEventListener('click', () => {
   const greenSeed = cEl('randomGreenSeed'); if (greenSeed) greenSeed.value = '54321';
   cEl('section-randomGreen')?.classList.remove('open');
 });
+
+cEl('addOneTimeDeposit')?.addEventListener('click', () => addOneTimeFlow('deposit'));
+cEl('addOneTimeWithdrawal')?.addEventListener('click', () => addOneTimeFlow('withdrawal'));
+calcRoot?.addEventListener('click', event => {
+  const removeButton = event.target?.closest?.('[data-remove-one-time-flow]');
+  if (!removeButton || !calcRoot.contains(removeButton)) return;
+  const row = removeButton.closest('.tlc-one-time-row');
+  const list = row?.parentElement;
+  const type = list?.id === 'tlc-oneTimeDepositList' ? 'deposit' : 'withdrawal';
+  row?.remove();
+  refreshOneTimeFlowEmptyState(type);
+  onCalcInput();
+});
+cEl('btnReset')?.addEventListener('click', () => {
+  ['deposit', 'withdrawal'].forEach(type => {
+    const list = getOneTimeFlowList(type);
+    if (list) list.innerHTML = '';
+    refreshOneTimeFlowEmptyState(type);
+  });
+  updateOneTimeDateBounds();
+});
+refreshOneTimeFlowEmptyState('deposit');
+refreshOneTimeFlowEmptyState('withdrawal');
+updateOneTimeDateBounds();
 
 
 </script>
@@ -4525,6 +4718,169 @@ cEl('btnReset')?.addEventListener('click', () => {
 .tf-ocr-details summary{color:var(--teal);font-size:10px;font-weight:700;cursor:pointer}
 .tf-ocr-details pre{max-height:150px;overflow:auto;margin:8px 0 0;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink2);font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:600px){.tf-screenshot-import{padding:11px}.tf-screenshot-controls{align-items:stretch;flex-direction:column}.tf-screenshot-controls input[type=file]{min-height:39px}.tf-screenshot-controls button{width:100%}}
+</style>
+<style>
+/* Compact, responsive rows for dated one-time cash flows. */
+#tradelab-calc-page .tlc-flow-hint{margin:-2px 0 8px;color:var(--muted);font-size:11px;line-height:1.45}
+#tradelab-calc-page .tlc-one-time-list{display:grid;gap:8px}
+#tradelab-calc-page .tlc-one-time-row{display:grid;grid-template-columns:minmax(112px,1fr) minmax(112px,1fr) auto;align-items:end;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+#tradelab-calc-page .tlc-one-time-row.is-invalid{border-color:color-mix(in srgb,var(--loss) 55%,var(--line))}
+#tradelab-calc-page .tlc-one-time-field{display:grid;min-width:0;gap:4px;color:var(--muted);font-size:10px;font-weight:650}
+#tradelab-calc-page .tlc-one-time-field input{width:100%;min-width:0}
+#tradelab-calc-page .tlc-one-time-amount{position:relative;display:flex;align-items:center;min-width:0}
+#tradelab-calc-page .tlc-one-time-amount>span{position:absolute;left:11px;z-index:1;color:var(--muted);font-size:12px}
+#tradelab-calc-page .tlc-one-time-amount input{padding-left:27px!important}
+#tradelab-calc-page .tlc-remove-flow{white-space:nowrap}
+#tradelab-calc-page .tlc-flow-error{grid-column:1/-1;color:var(--loss);font-size:10px;line-height:1.35}
+#tradelab-calc-page .tlc-flow-error[hidden]{display:none}
+#tradelab-calc-page .tlc-flow-empty{padding:9px 10px;border:1px dashed var(--line2);border-radius:9px;color:var(--muted);font-size:10px}
+#tradelab-calc-page .tlc-one-time-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:7px}
+#tradelab-calc-page .tlc-one-time-range{color:var(--muted);font-size:9px;line-height:1.35}
+@media(max-width:430px){#tradelab-calc-page .tlc-one-time-row{grid-template-columns:repeat(2,minmax(0,1fr))}#tradelab-calc-page .tlc-remove-flow{grid-column:1/-1;justify-self:end}#tradelab-calc-page .tlc-one-time-footer{align-items:flex-start;flex-direction:column}}
+</style>
+<style id="tradelab-responsive-spacing">
+/* Sitewide spacing pass: preserve each page while giving cards and controls room at every width. */
+.main,.page,.pagehead,.panel,.panelhead,.stack,.grid,.split,.cols2,.actions,.row,.between,
+.formgrid>*,.mapgrid>*,.grid3>*,.resource-card{min-width:0}
+.page{width:100%}
+.main{padding-top:clamp(22px,2.4vw,34px);padding-bottom:clamp(52px,5vw,76px)}
+.pagehead{gap:clamp(12px,1.6vw,20px);margin-bottom:clamp(16px,1.8vw,24px)}
+.pagehead>div:first-child{flex:1 1 270px;min-width:0}
+.pagehead .actions{gap:8px;max-width:100%}
+.pagehead .actions>*{max-width:100%;min-width:0}
+.grid,.stack,.split,.cols2{gap:clamp(12px,1.35vw,18px)}
+.panel{padding:clamp(16px,1.55vw,22px)}
+.panelhead{gap:10px;margin-bottom:clamp(11px,1.15vw,16px)}
+.formgrid,.mapgrid,.grid3{gap:clamp(10px,1.25vw,16px)}
+.formgrid>*,.mapgrid>*,.grid3>*{overflow-wrap:anywhere}
+.row,.between,.actions{gap:clamp(7px,.9vw,11px)}
+.seg{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.seg button{flex:none;white-space:nowrap}
+.tablewrap,.projection-table-wrapper,.table-wrapper{width:100%;max-width:100%;overscroll-behavior-x:contain}
+.kpi{padding:clamp(11px,1.15vw,16px)}
+.kpi .v{font-size:clamp(18px,1.8vw,25px)}
+.portfolio-snapshot{padding:clamp(14px,1.35vw,20px)}
+.portfolio-head{gap:10px}
+.portfolio-cards{gap:clamp(8px,.9vw,12px)}
+.portfolio-card{padding:clamp(9px,1vw,14px)}
+.portfolio-card .v{font-size:clamp(16px,1.55vw,21px)}
+.portfolio-support-grid{gap:clamp(7px,.8vw,10px)}
+.portfolio-support-item{padding:clamp(8px,.9vw,11px)}
+.account-flow-form{gap:8px}
+.resource-grid{gap:clamp(10px,1.2vw,16px)}
+.resource-card{padding:clamp(16px,1.55vw,22px)}
+.modal{padding:clamp(17px,2.2vw,26px)}
+.tf-leg-panel{padding:clamp(11px,1.1vw,15px)}
+.tf-leg-heading{gap:10px;margin-bottom:12px}
+.tf-average-card{gap:clamp(8px,1vw,12px);padding:clamp(11px,1.15vw,15px)}
+#tradelab-calc-page .section-intro{gap:clamp(12px,1.5vw,20px);padding:clamp(16px,1.8vw,24px)}
+#tradelab-calc-page .section-toolbar{gap:8px;padding:clamp(8px,1vw,12px)}
+#tradelab-calc-page .main-grid{gap:clamp(13px,1.5vw,20px)}
+#tradelab-calc-page .card-header{gap:10px;padding:clamp(13px,1.25vw,17px) clamp(14px,1.5vw,20px)}
+#tradelab-calc-page .card-body{padding:clamp(14px,1.55vw,20px)}
+#tradelab-calc-page .right-stack{gap:clamp(12px,1.35vw,18px)}
+
+@media (min-width:721px) and (max-width:1080px){
+  .sidebar{width:196px;padding:18px 10px}
+  .main{margin-left:196px;width:calc(100% - 196px);padding-left:clamp(18px,2.5vw,28px);padding-right:clamp(18px,2.5vw,28px)}
+  .pagehead{margin-bottom:18px}
+  .panel{padding:18px}
+  .kpis{gap:9px}
+  .kpi .v{font-size:20px}
+  .portfolio-card{padding:10px}
+  .portfolio-card .v{font-size:17px}
+  #tradelab-calc-page .card-body{padding:16px}
+}
+@media (min-width:721px) and (max-width:820px){
+  .main{padding-left:17px;padding-right:17px}
+  .panel{padding:16px}
+  .formgrid{gap:10px}
+  .formgrid label{font-size:12.5px}
+  .portfolio-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .portfolio-support-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pagehead .actions{flex:1 1 100%}
+}
+@media (max-width:720px){
+  .main{margin:0;width:100%;padding:calc(68px + env(safe-area-inset-top,0px)) 14px calc(96px + env(safe-area-inset-bottom,0px))}
+  .pagehead{gap:12px;margin-bottom:16px}
+  .pagehead>div:first-child{flex-basis:100%}
+  .pagehead .actions{width:100%;justify-content:flex-start;gap:7px}
+  .pagehead .actions>*{flex:0 1 auto}
+  .panel{padding:15px}
+  .panelhead{align-items:flex-start;gap:8px;margin-bottom:12px}
+  .grid,.stack,.split,.cols2{gap:12px}
+  .formgrid,.mapgrid,.grid3{gap:11px}
+  .kpis{gap:8px}
+  .portfolio-snapshot{padding:14px}
+  .portfolio-head{margin-bottom:11px}
+  .portfolio-card{padding:10px 8px}
+  .portfolio-card .v{font-size:16px}
+  .portfolio-support-item{padding:8px}
+  .actions .btn{white-space:normal;text-align:center}
+  .modal{padding:17px}
+  .tf-leg-panel{padding:11px}
+  #tradelab-calc-page .section-intro{padding:15px}
+  #tradelab-calc-page .card-header{padding:13px 14px 11px}
+  #tradelab-calc-page .card-body{padding:14px}
+}
+@media (max-width:420px){
+  .main{padding-left:11px;padding-right:11px}
+  .pagehead{margin-bottom:14px}
+  .panel{padding:13px}
+  .panelhead{margin-bottom:10px}
+  .row,.between,.actions{gap:7px}
+  .portfolio-snapshot{padding:12px}
+  .portfolio-cards{gap:7px}
+  .portfolio-card{padding:9px 6px}
+  .portfolio-card .l{font-size:10.5px}
+  .portfolio-card .v{font-size:15px}
+  .portfolio-card .s{font-size:10px}
+  .portfolio-support-grid{gap:6px}
+  .portfolio-support-item{padding:7px 6px}
+  .portfolio-support-item strong{font-size:12px}
+  .portfolio-support-item span{font-size:10px}
+  .kpi{padding:10px 7px}
+  .kpi .v{font-size:18px}
+  .seg button{padding:6px 9px;font-size:12px}
+  #tradelab-calc-page .card-body{padding:12px}
+}
+</style>
+<style id="tradelab-one-time-flow-spacing">
+/* Give one-time cash flows their own aligned groups and let each fill adapt to its card width. */
+#tradelab-calc-page .tlc-one-time-section{margin:14px 14px 0;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+#tradelab-calc-page .tlc-one-time-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#tradelab-calc-page .tlc-one-time-heading{min-width:0;flex:1}
+#tradelab-calc-page .tlc-one-time-heading h3{margin:1px 0 3px;color:var(--ink);font-size:12px;font-weight:750;letter-spacing:.01em}
+#tradelab-calc-page .tlc-flow-hint{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+#tradelab-calc-page .tlc-one-time-section-head>.btn{flex:none;min-height:34px;padding:6px 9px}
+#tradelab-calc-page .tlc-one-time-list{display:grid;gap:9px;margin-top:11px;container-type:inline-size;container-name:cashflow}
+#tradelab-calc-page .tlc-one-time-row{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:10px 12px;padding:12px;border-radius:11px}
+#tradelab-calc-page .tlc-one-time-field{gap:5px;font-size:11px}
+#tradelab-calc-page .tlc-one-time-field input{min-height:40px;padding:8px 10px}
+#tradelab-calc-page .tlc-one-time-amount input{padding-left:28px!important}
+#tradelab-calc-page .tlc-remove-flow{grid-column:1/-1;justify-self:end;min-height:32px;padding:5px 10px}
+#tradelab-calc-page .tlc-flow-error{line-height:1.45}
+#tradelab-calc-page .tlc-flow-empty{padding:11px 12px;border-radius:10px;font-size:11px}
+#tradelab-calc-page .tlc-one-time-range{display:block;margin-top:9px;color:var(--muted);font-size:10px;line-height:1.4}
+@container cashflow (min-width: 425px){
+  #tradelab-calc-page .tlc-one-time-row{grid-template-columns:minmax(125px,1fr) minmax(125px,1fr) auto;gap:10px}
+  #tradelab-calc-page .tlc-remove-flow{grid-column:auto;align-self:end}
+}
+@container cashflow (max-width: 360px){
+  #tradelab-calc-page .tlc-one-time-row{grid-template-columns:minmax(0,1fr)}
+  #tradelab-calc-page .tlc-remove-flow{grid-column:1;justify-self:end}
+}
+@media(max-width:600px){
+  #tradelab-calc-page .tlc-one-time-section{margin:12px 10px 0;padding:11px}
+  #tradelab-calc-page .tlc-one-time-section-head{align-items:flex-start;gap:8px}
+  #tradelab-calc-page .tlc-one-time-section-head>.btn{white-space:nowrap}
+  #tradelab-calc-page .tlc-one-time-list{margin-top:9px}
+}
+@media(max-width:390px){
+  #tradelab-calc-page .tlc-one-time-section{margin-right:8px;margin-left:8px;padding:10px}
+  #tradelab-calc-page .tlc-one-time-section-head{flex-direction:column}
+  #tradelab-calc-page .tlc-one-time-section-head>.btn{align-self:flex-start}
+}
 </style>
 </body>
 </html>
