@@ -506,12 +506,12 @@ td.pnl{font-weight:700}
           <div class="card-header">
             <div class="card-title">
               <div class="icon" style="background:var(--gold-dim);color:var(--gold)">1</div>
-              Assumption
+              Plan
             </div>
           </div>
           <div class="card-body">
 
-            <div class="tlc-input-overline"><strong>Core assumptions</strong><span>Updates live</span></div>
+            <div class="tlc-input-overline"><strong>Plan settings</strong><span>Updates live</span></div>
             <p class="tlc-step-hint">Set your starting balance, daily return, schedule, and start date. Returns apply only on active days.</p>
             <!-- Starting Principal -->
             <div class="form-group">
@@ -757,7 +757,7 @@ td.pnl{font-weight:700}
       <div class="right-stack">
 
         <!-- Summary stat cards (filled by JS) -->
-        <section class="tlc-results-intro" aria-label="Projected results"><div><span class="tlc-results-step">2 · Projection</span><p>These estimates change as you edit your assumptions.</p></div><span class="tlc-live-indicator"><i></i> Updating live</span></section>
+        <section class="tlc-results-intro" aria-label="Projected results"><div><span class="tlc-results-step">2 · Projection</span><p>These estimates change as you edit your plan.</p></div><span class="tlc-live-indicator"><i></i> Updating live</span></section>
         <div class="summary-grid" id="tlc-summaryGrid"></div>
 
         <!-- Analysis card -->
@@ -2397,6 +2397,59 @@ function parseFillClock(value){
 }
 function formatFillClock(value){const p=parseFillClock(value);if(!p)return'';const h=p.hour%12||12;return`${h}:${p2(p.minute)} ${p.hour<12?'AM':'PM'}`}
 function fillDateTime(date,clock){const p=parseFillClock(clock),m=String(date||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!p||!m)return null;const y=Number(m[1]),mo=Number(m[2])-1,d=Number(m[3]),dt=new Date(y,mo,d,p.hour,p.minute,0,0);if(dt.getFullYear()!==y||dt.getMonth()!==mo||dt.getDate()!==d||dt.getHours()!==p.hour||dt.getMinutes()!==p.minute)return null;return dt.toISOString()}
+let tradeOcrScriptPromise=null;
+function loadTradeOcr(){
+ if(window.Tesseract?.createWorker)return Promise.resolve(window.Tesseract);
+ if(!tradeOcrScriptPromise)tradeOcrScriptPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';script.async=true;script.onload=()=>window.Tesseract?.createWorker?resolve(window.Tesseract):reject(new Error('The screenshot reader did not initialize.'));script.onerror=()=>{tradeOcrScriptPromise=null;reject(new Error('Could not load the screenshot reader. Check your connection and try again.'))};document.head.append(script)});
+ return tradeOcrScriptPromise
+}
+function screenshotDate(line){
+ let m=String(line||'').match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+ if(m){const y=+m[1],mo=+m[2],d=+m[3];if(mo>0&&mo<=12&&d>0&&d<=31)return`${m[1]}-${p2(mo)}-${p2(d)}`}
+ m=String(line||'').match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/);
+ if(m){const mo=+m[1],d=+m[2],rawYear=m[3],y=rawYear.length===2?2000+Number(rawYear):Number(rawYear);if(mo>0&&mo<=12&&d>0&&d<=31)return`${y}-${p2(mo)}-${p2(d)}`}
+ const monthNames='jan feb mar apr may jun jul aug sep oct nov dec'.split(' ');
+ m=String(line||'').match(/\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+(\d{1,2})(?:,)?\s+(\d{2,4})\b/i);
+ if(m){const mo=monthNames.findIndex(x=>x===m[1].slice(0,3).toLowerCase())+1,rawYear=m[3],y=rawYear.length===2?2000+Number(rawYear):Number(rawYear);return`${y}-${p2(mo)}-${p2(+m[2])}`}
+ return''
+}
+function screenshotClock(line){
+ const s=String(line||'');let m=s.match(/\b(\d{1,2}:\d{2})\s*(AM|PM)\b/i);if(m)return formatFillClock(m[1]+' '+m[2]);
+ m=s.match(/\b(\d{1,2}:\d{2})\b/);if(m&&(/\b(?:time|filled|executed|opened|closed)\b/i.test(s)||screenshotDate(s)))return formatFillClock(m[1]);
+ m=s.match(/\b(?:time|filled|executed)\s*[:@]?\s*(\d{3,4})\b/i);if(m)return formatFillClock(m[1]);
+ return''
+}
+function parseTradeScreenshotText(rawText){
+ const lines=String(rawText||'').split(/\r?\n/).map(x=>x.replace(/[|\u00a0]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean),text=lines.join('\n'),upper=text.toUpperCase();let symbol='',optionType='',optionStrike='',optionExpiration='',contractLine='';
+ const occ=/\b(?:O:)?([A-Z][A-Z0-9.]{0,5})\s*(\d{6})\s*([CP])\s*(\d{8})\b/;
+ for(const line of lines){const m=line.toUpperCase().match(occ);if(m){symbol=m[1].replace(/\.$/,'');optionType=m[3]==='C'?'Call':'Put';optionStrike=String(Number(m[4])/1000);const yy=Number(m[2].slice(0,2)),year=yy>=70?1900+yy:2000+yy;optionExpiration=`${year}-${m[2].slice(2,4)}-${m[2].slice(4,6)}`;contractLine=line;break}}
+ if(!symbol){for(const line of lines){let m=line.toUpperCase().match(/\b([A-Z][A-Z0-9.]{0,5})\s+\$?(\d{1,5}(?:\.\d{1,3})?)\s*(CALL|PUT|[CP])\b/);if(!m)m=line.toUpperCase().match(/\b([A-Z][A-Z0-9.]{0,5})\s+\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\s+\$?(\d{1,5}(?:\.\d{1,3})?)\s*(CALL|PUT|[CP])\b/);if(m){symbol=m[1];optionStrike=m[2];optionType=/^(C|CALL)$/.test(m[3])?'Call':'Put';contractLine=line;const exp=screenshotDate(line);if(exp)optionExpiration=exp;break}}}
+ if(!symbol){const m=upper.match(/\b(?:TICKER|SYMBOL|UNDERLYING)(?:\s+SYMBOL)?\s*[:#]?\s*\$?([A-Z][A-Z0-9.-]{0,5})\b/);if(m)symbol=m[1].replace(/\.$/,'')}
+ if(!symbol){const stops=new Set('BUY SELL BTO STO BTC STC CALL PUT OPEN CLOSE FILLED ORDER TRADE POSITION DAY LIMIT MARKET PRICE COST PNL GAIN LOSS QTY QUANTITY SHARES CONTRACTS TOTAL ACCOUNT ACTIVITY HISTORY'.split(' '));const solo=lines.map(x=>x.toUpperCase().match(/^\$?([A-Z]{1,5})$/)?.[1]).find(x=>x&&!stops.has(x));if(solo)symbol=solo}
+ const actionRe=/\b(BUY\s+TO\s+OPEN|SELL\s+TO\s+CLOSE|SELL\s+TO\s+OPEN|BUY\s+TO\s+CLOSE|BTO|STC|STO|BTC|BOUGHT|SOLD|BUY|SELL)\b/i,events=[];
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i],am=line.match(actionRe);if(!am)continue;
+  let context=line;for(let j=i+1;j<Math.min(lines.length,i+3)&&!actionRe.test(lines[j]);j++)if(context.length<180)context+=' '+lines[j];
+  const after=context.slice((context.match(actionRe)?.index||0)+am[0].length),explicitQty=context.match(/\b(\d+(?:\.\d+)?)\s*(?:contracts?|shares?)\b/i);let qty=explicitQty?Number(explicitQty[1]):NaN;
+  if(!Number.isFinite(qty)){const first=after.match(/^\s*(?:to\s+(?:open|close)\s*)?[x×]?\s*(\d+(?:\.\d+)?)(?!\s*[:/])/i);if(first)qty=Number(first[1]);if(optionStrike&&Number.isFinite(qty)&&Math.abs(qty-Number(optionStrike))<1e-8)qty=NaN}
+  if(!Number.isFinite(qty)||qty<=0)qty=1;
+  let priceText='',priceMatch=context.match(/(?:@|(?:avg(?:erage)?\s*)?(?:fill\s*)?price\s*[:=]|premium\s*[:=]|filled\s+at)\s*\$?\s*(\d[\d,]*(?:\.\d{1,4})?)/i);
+  if(priceMatch)priceText=priceMatch[1];
+  if(!priceText){const dollars=[...context.matchAll(/\$\s*(\d[\d,]*(?:\.\d{1,4})?)/g)];if(dollars.length)priceText=dollars[dollars.length-1][1]}
+  if(!priceText){const decimals=[...context.matchAll(/\b(\d{1,4}\.\d{1,4})\b/g)];if(decimals.length)priceText=decimals[decimals.length-1][1]}
+  if(!priceText)continue;
+  let price=Number(priceText.replace(/,/g,''));if(!Number.isFinite(price)||price<=0)continue;
+  if(optionType&&price>=20&&(!priceText.includes('.')||/\.0+$/.test(priceText)))price/=100;
+  const upperAction=am[0].toUpperCase(),type=/^(SELL|SOLD|STO|STC)/.test(upperAction)?'sell':'buy',openClose=upperAction.includes('TO OPEN')||upperAction==='BTO'||upperAction==='STO'?'open':upperAction.includes('TO CLOSE')||upperAction==='BTC'||upperAction==='STC'?'close':'';
+  const date=screenshotDate(context),clock=screenshotClock(context),expDate=optionExpiration||screenshotDate(contractLine);
+  events.push({type,openClose,qty,price,date:date&&date!==expDate?date:'',clock,index:i,context})
+ }
+ events.sort((a,b)=>{const at=a.date&&a.clock?ts(fillDateTime(a.date,a.clock)):0,bt=b.date&&b.clock?ts(fillDateTime(b.date,b.clock)):0;return at&&bt?at-bt:a.index-b.index});
+ let side=events.length?(events[0].openClose==='open'?(events[0].type==='sell'?'Short':'Long'):events[0].openClose==='close'?(events[0].type==='buy'?'Short':'Long'):(events[0].type==='sell'?'Short':'Long')):'Long';
+ const entries=[],exits=[];for(const e of events){let isEntry=side==='Long'?e.type==='buy':e.type==='sell';if(e.openClose==='open')isEntry=true;if(e.openClose==='close')isEntry=false;(isEntry?entries:exits).push({qty:e.qty,price:e.price,date:e.date,clock:e.clock})}
+ const stockClue=/\b(?:shares?|stock trade)\b/i.test(text)&&!optionType;
+ return{symbol,optionType,optionStrike,optionExpiration,hasOption:!!optionType,stockClue,side,entries,exits,events,text}
+}
 function openTradeForm(id,draftId){
  const savedDraft=draftId?state.drafts.find(x=>x.id===draftId):null,t=id?state.trades.find(x=>x.id===id):(savedDraft?.baseTradeId?state.trades.find(x=>x.id===savedDraft.baseTradeId):null),now=Date.now(),d=savedDraft||t||{symbol:'',side:'Long',qty:'',entryPrice:'',exitPrice:'',entry:new Date(now-30*6e4).toISOString(),exit:new Date(now).toISOString(),fees:'',multiplier:1};
  let side=d.side||'Long',optionPricing=savedDraft?!!savedDraft.optionPricing:(t?!!(t.contractSymbol||isOptionContract(d.symbol)):true),rawOptionQuotes=false;
@@ -2409,6 +2462,7 @@ function openTradeForm(id,draftId){
  <div class="formgrid">
   <div><label for="tfSym">Underlying Ticker</label><input id="tfSym" class="wide" placeholder="e.g. SPY" value="${esc(d.symbol)}" autocapitalize="characters" autocomplete="off" spellcheck="false" autofocus><div class="tf-option-mode"><strong id="tfTradeModeLabel">Options Trade</strong><button class="btn sm" id="tfTradeType" type="button">Switch To Stock Trade</button></div></div>
   <div><label for="tfCompanyName">Company Name <span class="muted small">(Optional)</span></label><input id="tfCompanyName" class="wide" placeholder="e.g. Apple Inc." value="${esc(d.companyName||'')}" autocomplete="off" autocapitalize="words"></div>
+  <section class="span tf-screenshot-import" aria-label="Add a trade from a screenshot"><div class="tf-screenshot-copy"><strong>Fill From Screenshot</strong><span>TradeLab reads the image in this browser. Review every field before saving.</span></div><div class="tf-screenshot-controls"><input id="tfTradeScreenshot" type="file" accept="image/*" aria-label="Choose a trade screenshot"><button class="btn sm" id="tfReadScreenshot" type="button" disabled>Read Screenshot</button></div><div class="tf-screenshot-status" id="tfScreenshotStatus" role="status" aria-live="polite">Choose a screenshot of your order or fill details.</div><details id="tfOcrDetails" class="tf-ocr-details" hidden><summary>Show recognized text</summary><pre id="tfOcrText"></pre></details></section>
   <div id="tfOptionDetails" class="tf-option-details span" style="display:${optionPricing?'grid':'none'}"><div><label for="tfStrike">Strike Price</label><input id="tfStrike" type="number" min="0" step="any" class="wide" inputmode="decimal" placeholder="757" value="${esc(optionStrike)}"></div><div><label for="tfRight">Call Or Put</label><select id="tfRight" class="wide"><option value="Call" ${optionType==='Call'?'selected':''}>Call</option><option value="Put" ${optionType==='Put'?'selected':''}>Put</option></select></div><div><label for="tfExpiration">Expiration Date</label><input id="tfExpiration" type="date" class="wide" value="${esc(optionExpiration)}" aria-label="Option Expiration Date"></div></div>
   <div><span class="lbl">Direction</span><div class="seg" id="tfSide" role="group" aria-label="Direction"><button type="button" data-s="Long" aria-pressed="${side==='Long'}">Long (bought first)</button><button type="button" data-s="Short" aria-pressed="${side==='Short'}">Short</button></div></div>
   <div></div>
@@ -2434,6 +2488,23 @@ function openTradeForm(id,draftId){
  const captureDraft=()=>({id:savedDraft?.id||uid(),baseTradeId:t?.id||savedDraft?.baseTradeId||null,createdAt:savedDraft?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),symbol:v('#tfSym').trim().toUpperCase(),companyName:v('#tfCompanyName').trim(),side,optionPricing,rawOptionQuotes,optionType:optionPricing?v('#tfRight'):'Call',optionStrike:optionPricing?v('#tfStrike'):'',optionExpiration:optionPricing?v('#tfExpiration'):'',entries:$$('[data-leg-row="entry"]',el).map(row=>({qty:$('[data-leg-qty]',row).value,price:$('[data-leg-price]',row).value,date:$('[data-leg-date]',row).value,clock:$('[data-leg-clock]',row).value})),exits:$$('[data-leg-row="exit"]',el).map(row=>({qty:$('[data-leg-qty]',row).value,price:$('[data-leg-price]',row).value,date:$('[data-leg-date]',row).value,clock:$('[data-leg-clock]',row).value})),entryFee:v('#tfEntryFee'),exitFee:v('#tfExitFee'),multiplier:v('#tfMult'),source:t?.source||savedDraft?.source||'Manual'});
  const capitalizeWordStarts=value=>value.replace(/(^|[\s\-–—'’])([\p{L}])/gu,(_,separator,letter)=>separator+letter.toLocaleUpperCase());
  const keepCaret=(input,next)=>{if(input.value===next)return;const start=input.selectionStart,end=input.selectionEnd;input.value=next;if(start!=null&&end!=null)input.setSelectionRange(Math.min(start,next.length),Math.min(end,next.length))};
+ const ocrFile=$('#tfTradeScreenshot',el),ocrButton=$('#tfReadScreenshot',el),ocrStatus=$('#tfScreenshotStatus',el),ocrDetails=$('#tfOcrDetails',el),ocrText=$('#tfOcrText',el);let screenshot=null;
+ ocrFile.addEventListener('change',()=>{screenshot=ocrFile.files?.[0]||null;ocrButton.disabled=!screenshot;ocrStatus.textContent=screenshot?`${screenshot.name} is ready. Select Read Screenshot to scan it.`:'Choose a screenshot of your order or fill details.';ocrDetails.hidden=true});
+ ocrButton.addEventListener('click',async()=>{
+  if(!screenshot)return;ocrButton.disabled=true;ocrStatus.textContent='Loading the private, on-device screenshot reader…';let worker=null;
+  try{
+   const engine=await loadTradeOcr();ocrStatus.textContent='Reading screenshot…';worker=await engine.createWorker('eng');const result=await worker.recognize(screenshot),parsed=parseTradeScreenshotText(result.data?.text||'');ocrText.textContent=parsed.text||'No readable text was found.';ocrDetails.hidden=false;
+   const detected=[];
+   if(parsed.symbol){$('#tfSym',el).value=parsed.symbol;detected.push(parsed.symbol)}
+   if(parsed.hasOption){optionPricing=true;syncOption();if(parsed.optionStrike)$('#tfStrike',el).value=parsed.optionStrike;if(parsed.optionType)$('#tfRight',el).value=parsed.optionType;if(parsed.optionExpiration)$('#tfExpiration',el).value=parsed.optionExpiration;detected.push(`${parsed.optionStrike||''} ${parsed.optionType}`.trim())}
+   else if(parsed.stockClue){optionPricing=false;syncOption();detected.push('Stock trade')}
+   if(parsed.events.length){side=parsed.side;$$('#tfSide button',el).forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===side));const buildRows=(kind,fills)=>(fills.length?fills:[{qty:'',price:'',date:'',clock:''}]).map(f=>legRow(kind,{qty:f.qty??'',price:f.price??'',date:f.date||'',clock:f.clock||''})).join('');$('#tfEntryLegs',el).innerHTML=buildRows('entry',parsed.entries);$('#tfExitLegs',el).innerHTML=buildRows('exit',parsed.exits);syncFees();detected.push(`${parsed.events.length} fill${parsed.events.length===1?'':'s'}`)}
+   preview();$('#tfErr',el).textContent='';
+   if(detected.length){const needsTime=parsed.events.some(x=>!x.date||!x.clock);ocrStatus.textContent=`Detected ${detected.join(' · ')}. Review the filled fields${needsTime?' and complete any missing fill dates or times':''} before saving.`}
+   else ocrStatus.textContent='Text was read, but no clear trade fields were found. Fill in the form manually or try a sharper screenshot.'
+  }catch(error){ocrStatus.textContent=error?.message||'Could not read that screenshot. Try another image.'}
+  finally{if(worker)try{await worker.terminate()}catch{}ocrButton.disabled=!screenshot}
+ });
  syncOption();syncFees();preview();el.addEventListener('input',e=>{if(e.target.id==='tfSym')keepCaret(e.target,e.target.value.toUpperCase());if(e.target.id==='tfCompanyName')keepCaret(e.target,capitalizeWordStarts(e.target.value));if(e.target.matches('[data-leg-clock]')){const p=parseFillClock(e.target.value),picker=e.target.closest('.tf-clock-wrap')?.querySelector('[data-leg-clock-picker]');if(picker)picker.value=p?`${p2(p.hour)}:${p2(p.minute)}`:''}if(e.target.id==='tfEntryFee'||e.target.id==='tfExitFee')syncFees();if(e.target.id==='tfSym'&&!t){const meta=optionContractDetails(e.target.value);if(isOptionContract(e.target.value)){optionPricing=true;if(meta){$('#tfRight',el).value=meta.optionType;$('#tfStrike',el).value=meta.optionStrike;$('#tfExpiration',el).value=meta.expiration}syncOption()}}preview();$('#tfErr',el).textContent=''});
  el.addEventListener('change',e=>{if(e.target.matches('[data-leg-clock-picker]')){const clock=e.target.closest('.tf-clock-wrap')?.querySelector('[data-leg-clock]');if(clock){clock.value=formatFillClock(e.target.value);clock.dispatchEvent(new Event('input',{bubbles:true}))}}});
  el.addEventListener('focusout',e=>{if(e.target.matches('[data-leg-clock]')){const formatted=formatFillClock(e.target.value);if(formatted)e.target.value=formatted;preview()}if(e.target.matches('[data-leg-price]')){const price=Number(e.target.value);if(Number.isFinite(price)&&price>=.01&&price<=9999.99&&Math.abs(price*100-Math.round(price*100))<1e-8)e.target.value=price.toFixed(2);preview()}});
@@ -4413,6 +4484,23 @@ cEl('btnReset')?.addEventListener('click', () => {
 #tradelab-calc-page .projection-schedule-badge.is-start i{background:var(--muted)}
 #tradelab-calc-page .tlc-table-hint{margin-top:8px;color:var(--muted);font-size:10px;text-align:right}
 @media(max-width:700px){#tradelab-calc-page #tlc-calcTabBar{gap:2px;padding:3px}#tradelab-calc-page #tlc-calcTabBar .tab-btn{padding:7px 8px;font-size:10px}#tradelab-calc-page .projection-table-intro{align-items:flex-start;flex-direction:column;padding:11px 12px}#tradelab-calc-page .projection-schedule-legend{gap:10px}#tradelab-calc-page .projection-table-wrapper{max-height:60vh}}
+</style>
+<style>
+/* Screenshot-assisted trade entry. */
+.tf-screenshot-import{display:grid;gap:9px;padding:13px 14px;border:1px solid color-mix(in srgb,var(--teal) 24%,var(--line));border-radius:12px;background:linear-gradient(135deg,var(--teal-soft),var(--panel) 78%)}
+.tf-screenshot-copy{display:grid;gap:3px}
+.tf-screenshot-copy strong{color:var(--ink);font-size:12px;font-weight:750}
+.tf-screenshot-copy span{color:var(--muted);font-size:11px;line-height:1.45}
+.tf-screenshot-controls{display:flex;align-items:center;gap:9px;min-width:0}
+.tf-screenshot-controls input[type=file]{flex:1;min-width:0;width:100%;padding:6px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);color:var(--ink2);font-size:11px}
+.tf-screenshot-controls input[type=file]::file-selector-button{margin-right:8px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--ink2);font:inherit;font-weight:650;cursor:pointer}
+.tf-screenshot-controls button{flex:none;min-height:34px}
+.tf-screenshot-controls button:disabled{opacity:.5;cursor:not-allowed}
+.tf-screenshot-status{color:var(--ink2);font-size:10px;line-height:1.45}
+.tf-ocr-details{padding-top:7px;border-top:1px solid var(--line)}
+.tf-ocr-details summary{color:var(--teal);font-size:10px;font-weight:700;cursor:pointer}
+.tf-ocr-details pre{max-height:150px;overflow:auto;margin:8px 0 0;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink2);font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){.tf-screenshot-import{padding:11px}.tf-screenshot-controls{align-items:stretch;flex-direction:column}.tf-screenshot-controls input[type=file]{min-height:39px}.tf-screenshot-controls button{width:100%}}
 </style>
 </body>
 </html>
