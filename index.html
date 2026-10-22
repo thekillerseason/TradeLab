@@ -436,6 +436,20 @@ td.pnl{font-weight:700}
 
 .return-pct{font-size:.78em;font-weight:500;color:var(--ink2);white-space:nowrap}.tf-net-preview{gap:4px}.tf-net-preview .tf-return-note{font-size:.78rem;color:var(--ink2)}.tf-net-preview strong{line-height:1.25}
 </style>
+<style>
+/* Calculator spacing, tablet sequence, and scrollable projection table */
+#tradelab-calc-page .main-grid{grid-template-columns:minmax(300px,.92fr) minmax(0,1.45fr);gap:clamp(14px,1.8vw,22px);align-items:start}
+#tradelab-calc-page .right-stack{min-width:0;gap:clamp(12px,1.5vw,18px)}
+#tradelab-calc-page .table-wrapper{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-gutter:stable;max-height:min(58vh,560px)}
+#tradelab-calc-page .table-wrapper table{min-width:700px}
+#tradelab-calc-page .table-wrapper th,#tradelab-calc-page .table-wrapper td{padding:10px clamp(8px,1vw,14px)}
+#tradelab-calc-page .tlc-table-hint{display:none}
+@media(min-width:1025px) and (max-width:1250px){#tradelab-calc-page .main-grid{grid-template-columns:minmax(275px,.85fr) minmax(0,1.35fr);gap:14px}#tradelab-calc-page .card-body{padding:18px}}
+@media(max-width:1024px){#tradelab-calc-page .main-grid{grid-template-columns:minmax(0,1fr);gap:18px}#tradelab-calc-page .right-stack{order:0!important;gap:16px}#tradelab-calc-page aside .card{position:static}}
+@media(max-width:700px){#tradelab-calc-page .section-intro{align-items:flex-start;margin:0 0 14px}#tradelab-calc-page .section-title{font-size:1.35rem}#tradelab-calc-page .section-toolbar{display:flex;flex-wrap:wrap;gap:7px;padding:9px;margin-bottom:13px}#tradelab-calc-page .section-toolbar .btn{flex:1 1 calc(50% - 7px);min-width:130px;padding:8px 10px}#tradelab-calc-page .section-toolbar .pill{margin:0!important;text-align:center;flex:1 0 100%}#tradelab-calc-page .card-header{padding:14px 15px 12px;gap:10px;flex-wrap:wrap}#tradelab-calc-page .card-body{padding:15px}#tradelab-calc-page .right-stack{gap:13px}#tradelab-calc-page .tlc-results-intro{margin:0 1px 8px}#tradelab-calc-page .summary-grid{gap:8px;margin-bottom:12px}#tradelab-calc-page .table-wrapper{max-height:60vh;border-radius:12px}#tradelab-calc-page .table-wrapper table{min-width:680px}#tradelab-calc-page .table-wrapper th,#tradelab-calc-page .table-wrapper td{padding:9px 10px;font-size:.76rem}#tradelab-calc-page .tlc-table-hint{display:block;margin:7px 2px 0;color:var(--text-secondary);font-size:.72rem}}
+@media(max-width:390px){#tradelab-calc-page .section-intro-badge{display:none}#tradelab-calc-page .card-body{padding:12px}#tradelab-calc-page .tab-btn{padding:8px 9px;font-size:.74rem}}
+</style>
+
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -492,12 +506,13 @@ td.pnl{font-weight:700}
           <div class="card-header">
             <div class="card-title">
               <div class="icon" style="background:var(--gold-dim);color:var(--gold)">1</div>
-              Your assumptions
+              Assumption
             </div>
           </div>
           <div class="card-body">
 
-            <p class="tlc-step-hint">Change any value below to update the projection. Percentages are per active day.</p>
+            <div class="tlc-input-overline"><strong>Core assumptions</strong><span>Updates live</span></div>
+            <p class="tlc-step-hint">Set your starting balance, daily return, schedule, and start date. Returns apply only on active days.</p>
             <!-- Starting Principal -->
             <div class="form-group">
               <div class="form-label"><span class="label-text">Starting Principal</span></div>
@@ -742,21 +757,21 @@ td.pnl{font-weight:700}
       <div class="right-stack">
 
         <!-- Summary stat cards (filled by JS) -->
-        <section class="tlc-results-intro" aria-label="Projected results"><div><span class="tlc-results-step">2 · Your projection</span><p>These estimates change as you edit your assumptions.</p></div><span class="tlc-live-indicator"><i></i> Updating live</span></section>
+        <section class="tlc-results-intro" aria-label="Projected results"><div><span class="tlc-results-step">2 · Projection</span><p>These estimates change as you edit your assumptions.</p></div><span class="tlc-live-indicator"><i></i> Updating live</span></section>
         <div class="summary-grid" id="tlc-summaryGrid"></div>
 
         <!-- Analysis card -->
         <div class="card">
           <div class="card-header">
             <div class="card-title">
-              <div class="icon" style="background:var(--blue-dim);color:var(--blue)">📊</div>
-              Explore your projection
+              <div class="icon" style="background:var(--blue-dim);color:var(--blue)">3</div>
+              Explore
             </div>
-            <div class="tab-bar" style="margin-bottom:0;width:auto" id="tlc-calcTabBar">
-              <button class="tab-btn active" onclick="switchCalcTab('chart')">Chart</button>
-              <button class="tab-btn"        onclick="switchCalcTab('calendar')">Calendar</button>
-              <button class="tab-btn"        onclick="switchCalcTab('table')">Table</button>
-              <button class="tab-btn"        onclick="switchCalcTab('compare')">Compare</button>
+            <div class="tab-bar" style="margin-bottom:0;width:auto" id="tlc-calcTabBar" aria-label="Projection views">
+              <button type="button" class="tab-btn active" data-calc-tab="chart" aria-pressed="true" onclick="switchCalcTab('chart')">Chart</button>
+              <button type="button" class="tab-btn" data-calc-tab="calendar" aria-pressed="false" onclick="switchCalcTab('calendar')">Calendar</button>
+              <button type="button" class="tab-btn" data-calc-tab="table" aria-pressed="false" onclick="switchCalcTab('table')">Table</button>
+              <button type="button" class="tab-btn" data-calc-tab="compare" aria-pressed="false" onclick="switchCalcTab('compare')">Compare</button>
             </div>
           </div>
           <div class="card-body" style="padding-top:20px">
@@ -3540,8 +3555,16 @@ function toggleWithdrawType() {
 
 function switchCalcTab(name) {
   const tabs = ['chart', 'calendar', 'table', 'compare'];
-  calcRoot.querySelectorAll('#calcTabBar .tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === name));
-  tabs.forEach(t => cEl('calc-tab-' + t).classList.toggle('active', t === name));
+  const tabBar = cEl('calcTabBar');
+  if (tabBar) tabBar.querySelectorAll('.tab-btn').forEach(b => {
+    const selected = b.dataset.calcTab === name;
+    b.classList.toggle('active', selected);
+    b.setAttribute('aria-pressed', String(selected));
+  });
+  tabs.forEach(t => {
+    const panel = cEl('calc-tab-' + t);
+    if (panel) panel.classList.toggle('active', t === name);
+  });
   if (name === 'chart' && _growthChart) _growthChart.resize();
 }
 
@@ -4015,8 +4038,17 @@ function renderProgressionTable(res) {
   const wrap = cEl('tableContainer');
   if (!res.tableRows.length) { wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🗒</div><div class="empty-text">No data.</div></div>'; return; }
   const start = res.tableRows[0].balance;
-  let html = `<div class="table-wrapper"><table><thead><tr>
-    <th class="left">Day</th><th>Balance</th><th>vs Prior</th><th>vs Start</th><th>Note</th>
+  const startValue = cEl('startDate').value;
+  const startDate = startValue ? new Date(startValue + 'T00:00:00') : new Date();
+  const activeDays = getActiveDays();
+  let html = `<div class="projection-table-intro">
+    <div class="projection-table-copy"><strong>Daily Projection</strong><span>Follow the schedule you selected for this estimate.</span></div>
+    <div class="projection-schedule-legend" aria-label="Schedule legend">
+      <span><i class="is-on"></i>Selected On</span><span><i class="is-off"></i>Selected Off</span>
+    </div>
+  </div>
+  <div class="table-wrapper projection-table-wrapper"><table class="projection-table"><thead><tr>
+    <th class="left">Date</th><th>Day</th><th>Schedule</th><th>Balance</th><th>vs Prior</th><th>vs Start</th><th>Note</th>
   </tr></thead><tbody>`;
   for (let i = 0; i < res.tableRows.length; i++) {
     const r = res.tableRows[i];
@@ -4025,15 +4057,24 @@ function renderProgressionTable(res) {
     const chgP = prev > 0 ? (chg / prev) * 100 : 0;
     const tot = r.balance - start;
     const totP = start > 0 ? (tot / start) * 100 : 0;
-    html += `<tr>
-      <td>Day ${r.day}</td>
-      <td>${fmtCurrency(r.balance)}</td>
+    const rowDate = addDays(startDate, r.day);
+    const dateLabel = rowDate.toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const isStart = r.day === 0;
+    const isOn = !isStart && isActiveTradingDate(rowDate, activeDays);
+    const scheduleClass = isStart ? 'is-start' : (isOn ? 'is-on' : 'is-off');
+    const scheduleLabel = isStart ? 'Start' : (isOn ? 'On' : 'Off');
+    const scheduleTitle = isStart ? 'Starting balance' : (isOn ? 'Included in selected active days' : 'Excluded by selected active days');
+    html += `<tr class="projection-row ${scheduleClass}" title="${scheduleTitle}">
+      <td class="projection-date">${dateLabel}</td>
+      <td class="projection-day">Day ${r.day}</td>
+      <td><span class="projection-schedule-badge ${scheduleClass}"><i></i>${scheduleLabel}</span></td>
+      <td class="projection-balance">${fmtCurrency(r.balance)}</td>
       <td class="${chg >= 0 ? 'pos' : 'neg'}">${i === 0 ? '—' : fmtCurrency(chg) + ' (' + fmtPct(chgP, 3) + ')'}</td>
       <td class="${tot >= 0 ? 'pos' : 'neg'}">${fmtCurrency(tot)} (${fmtPct(totP, 2)})</td>
       <td>${r.isRandomRedDay ? '<span class="neg">Red day ' + fmtPct(-r.randomRedLossPct, 2) + '</span>' : '—'}</td>
     </tr>`;
   }
-  html += '</tbody></table></div>';
+  html += '</tbody></table></div><div class="tlc-table-hint">Swipe horizontally to see all projection columns.</div>';
   wrap.innerHTML = html;
 }
 
@@ -4186,5 +4227,192 @@ cEl('btnReset')?.addEventListener('click', () => {
 #tradelab-calc-page .scenario-follow-controls input{width:88px;min-height:34px;padding:5px 8px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);color:var(--ink);font-size:12px;text-transform:none}
 </style>
 
+<style>
+/* TradeLab calculator redesign: use the same surfaces and color tokens as the rest of the app. */
+#tradelab-calc-page{
+  --bg-primary:var(--bg);--bg-secondary:var(--panel2);--bg-card:var(--panel);--bg-card-hover:var(--panel2);--bg-input:var(--panel2);
+  --border:var(--line);--border-focus:color-mix(in srgb,var(--teal) 45%,transparent);--text-primary:var(--ink);--text-secondary:var(--ink2);--text-muted:var(--muted);
+  --gold:var(--teal);--gold-dim:var(--teal-soft);--gold-glow:color-mix(in srgb,var(--teal) 16%,transparent);
+  --green:var(--up);--green-dim:color-mix(in srgb,var(--up) 12%,transparent);--red:var(--loss);--red-dim:color-mix(in srgb,var(--loss) 11%,transparent);
+  --blue:var(--teal);--blue-dim:var(--teal-soft);--purple:#7362ad;--purple-dim:color-mix(in srgb,#7362ad 12%,transparent);
+  --radius-sm:8px;--radius-md:12px;--radius-lg:var(--r);--shadow-card:var(--shadow);--shadow-glow:none;
+  min-height:0;padding:0;background:transparent!important;color:var(--ink);font:inherit;line-height:1.5;overflow:visible;transition:none
+}
+#tradelab-calc-page::before,#tradelab-calc-page::after{display:none!important;content:none!important}
+#tradelab-calc-page *{font-family:inherit}
+#tradelab-calc-page .section-intro{align-items:center;gap:18px;margin:0 0 16px;padding:18px 20px;border:1px solid color-mix(in srgb,var(--teal) 24%,var(--line));border-radius:var(--r);background:linear-gradient(115deg,var(--teal-soft),var(--panel) 62%)}
+#tradelab-calc-page .section-kicker{margin-bottom:5px;color:var(--teal);font-size:10px;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+#tradelab-calc-page .section-title{margin:0;color:var(--ink);font-family:inherit;font-size:clamp(1.25rem,2vw,1.7rem);font-weight:760;letter-spacing:-.035em;line-height:1.15}
+#tradelab-calc-page .section-text{max-width:66ch;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.55}
+#tradelab-calc-page .section-intro-badge{flex:none;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink2);font-size:11px;font-weight:650;white-space:normal}
+#tradelab-calc-page .section-toolbar{display:flex;align-items:center;gap:8px;margin:0 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);box-shadow:var(--shadow)}
+#tradelab-calc-page .section-toolbar .btn{min-height:37px}
+#tradelab-calc-page .main-grid{display:grid;grid-template-columns:minmax(290px,340px) minmax(0,1fr);align-items:start;gap:16px}
+#tradelab-calc-page aside,#tradelab-calc-page .right-stack{min-width:0}
+#tradelab-calc-page aside .card{position:static;top:auto}
+#tradelab-calc-page .right-stack{display:flex;flex-direction:column;gap:14px}
+#tradelab-calc-page .card{overflow:hidden;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);box-shadow:var(--shadow);backdrop-filter:none}
+#tradelab-calc-page .card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+#tradelab-calc-page .card-body{padding:18px}
+#tradelab-calc-page .card-title{display:flex;align-items:center;gap:10px;color:var(--ink);font-family:inherit;font-size:15px;font-weight:730}
+#tradelab-calc-page .card-title .icon{width:27px;height:27px;border:1px solid color-mix(in srgb,var(--teal) 25%,var(--line));border-radius:8px;background:var(--teal-soft)!important;color:var(--teal)!important;font-family:inherit;font-size:12px;font-weight:800}
+#tradelab-calc-page .tlc-results-intro{align-items:center;margin:2px 1px 0}
+#tradelab-calc-page .tlc-results-step{color:var(--ink);font-size:15px;font-weight:760;letter-spacing:-.015em}
+#tradelab-calc-page .tlc-results-intro p{margin-top:3px;color:var(--muted);font-size:12px}
+#tradelab-calc-page .tlc-live-indicator{padding:5px 9px;border-color:var(--line);background:var(--panel);color:var(--muted);font-size:11px}
+#tradelab-calc-page .tlc-live-indicator i{background:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+#tradelab-calc-page .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin:0}
+#tradelab-calc-page .stat-card{position:relative;min-width:0;overflow:hidden;padding:14px 15px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow);backdrop-filter:none;animation:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+#tradelab-calc-page .stat-card:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+#tradelab-calc-page .stat-card::before{height:3px;background:var(--teal)}
+#tradelab-calc-page .stat-card.red::before{background:var(--loss)}
+#tradelab-calc-page .stat-card.green::before{background:var(--up)}
+#tradelab-calc-page .stat-card.purple::before{background:#7362ad}
+#tradelab-calc-page .stat-icon{display:grid;width:28px;height:28px;place-items:center;margin-bottom:10px;border-radius:8px;background:var(--teal-soft);color:var(--teal);font-size:13px}
+#tradelab-calc-page .gold .stat-icon,#tradelab-calc-page .blue .stat-icon{background:var(--teal-soft);color:var(--teal)}
+#tradelab-calc-page .green .stat-icon{background:var(--green-dim);color:var(--green)}
+#tradelab-calc-page .red .stat-icon{background:var(--red-dim);color:var(--red)}
+#tradelab-calc-page .purple .stat-icon{background:var(--purple-dim);color:var(--purple)}
+#tradelab-calc-page .stat-label{margin-bottom:4px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.065em}
+#tradelab-calc-page .stat-value{color:var(--ink);font-family:inherit;font-size:clamp(1.08rem,1.5vw,1.35rem);font-weight:760;letter-spacing:-.035em;line-height:1.2;overflow-wrap:anywhere}
+#tradelab-calc-page .stat-sub{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.4}
+#tradelab-calc-page .tab-bar{display:flex;max-width:100%;gap:3px;overflow-x:auto;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);scrollbar-width:thin}
+#tradelab-calc-page .tab-btn{flex:0 0 auto;min-height:34px;padding:7px 11px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:650;transition:background .15s,color .15s;white-space:nowrap}
+#tradelab-calc-page .tab-btn:hover{color:var(--ink)}
+#tradelab-calc-page .tab-btn.active{background:var(--panel);color:var(--teal);box-shadow:0 1px 3px rgba(15,35,50,.1)}
+#tradelab-calc-page .tab-panel{min-width:0}
+#tradelab-calc-page .form-group{margin-bottom:14px}
+#tradelab-calc-page .form-label{align-items:center;gap:8px;margin-bottom:6px}
+#tradelab-calc-page .label-text{color:var(--ink2);font-family:inherit;font-size:12px;font-weight:650;letter-spacing:0;text-transform:none}
+#tradelab-calc-page .label-badge{padding:3px 8px;border:1px solid color-mix(in srgb,var(--teal) 23%,var(--line));border-radius:999px;background:var(--teal-soft);color:var(--teal);font-size:10px;font-weight:700}
+#tradelab-calc-page input[type=number],#tradelab-calc-page input[type=text],#tradelab-calc-page input[type=date],#tradelab-calc-page select{min-width:0;min-height:40px;padding:8px 11px;border:1px solid var(--line2);border-radius:9px;background:var(--panel2);color:var(--ink);font-family:inherit;font-size:13px;box-shadow:none}
+#tradelab-calc-page input[type=number]:focus,#tradelab-calc-page input[type=text]:focus,#tradelab-calc-page input[type=date]:focus,#tradelab-calc-page select:focus{border-color:var(--teal);outline:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 16%,transparent)}
+#tradelab-calc-page input::placeholder{color:var(--muted)}
+#tradelab-calc-page input[type=date]::-webkit-calendar-picker-indicator{filter:none;opacity:.72}
+#tradelab-calc-page .input-prefix,#tradelab-calc-page .input-suffix{color:var(--muted);font-size:12px}
+#tradelab-calc-page .form-row{gap:10px}
+#tradelab-calc-page .section-label{margin:15px 0 7px;color:var(--muted);font-size:10px;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+#tradelab-calc-page .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+#tradelab-calc-page .toggle-label{color:var(--ink2);font-size:12px;font-weight:600}
+#tradelab-calc-page .toggle-slider{border-color:var(--line2);background:var(--line)}
+#tradelab-calc-page .toggle-slider::before{background:var(--panel)}
+#tradelab-calc-page .toggle-switch input:checked+.toggle-slider{border-color:var(--teal);background:var(--teal)}
+#tradelab-calc-page .toggle-switch input:checked+.toggle-slider::before{background:#fff}
+#tradelab-calc-page .day-selector{gap:5px}
+#tradelab-calc-page .day-btn{min-width:0;min-height:35px;padding:6px 3px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--muted);font-family:inherit;font-size:11px;font-weight:650;box-shadow:none}
+#tradelab-calc-page .day-btn.active,#tradelab-calc-page .day-btn.weekend.active{border-color:color-mix(in srgb,var(--teal) 34%,var(--line));background:var(--teal-soft);color:var(--teal);box-shadow:none}
+#tradelab-calc-page .day-btn:hover:not(.active){border-color:var(--teal);background:var(--panel);color:var(--ink)}
+#tradelab-calc-page .day-presets{gap:6px;margin-top:8px}
+#tradelab-calc-page .tlc-optional-settings{margin-top:14px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+#tradelab-calc-page .tlc-optional-settings>summary{padding:12px 13px}
+#tradelab-calc-page .tlc-optional-settings>summary strong{color:var(--ink);font-size:12px;font-weight:680}
+#tradelab-calc-page .tlc-optional-settings>summary small{color:var(--muted);font-size:11px}
+#tradelab-calc-page .tlc-disclosure{width:24px;height:24px;background:var(--teal-soft);color:var(--teal)}
+#tradelab-calc-page .tlc-optional-settings[open]>summary{border-color:var(--line)}
+#tradelab-calc-page .info-callout{margin-bottom:12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--teal) 20%,var(--line));border-radius:10px;background:var(--teal-soft);color:var(--ink2);font-size:11px;line-height:1.55}
+#tradelab-calc-page .info-callout strong{color:var(--ink)}
+#tradelab-calc-page .error-msg{color:var(--loss)}
+#tradelab-calc-page input.is-invalid{border-color:var(--loss)!important;box-shadow:0 0 0 3px var(--loss-soft)!important}
+#tradelab-calc-page .pct-bar-wrap{height:5px;margin-top:8px;background:var(--panel2)}
+#tradelab-calc-page .btn{min-height:36px;padding:7px 11px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);color:var(--ink2);font-family:inherit;font-size:12px;font-weight:650;box-shadow:none;transition:background .15s,border-color .15s,color .15s,transform .15s}
+#tradelab-calc-page .btn:hover{transform:translateY(-1px);border-color:var(--teal);background:var(--panel2);color:var(--ink)}
+#tradelab-calc-page .btn-primary,#tradelab-calc-page .btn-outline-blue,#tradelab-calc-page .btn-outline-green{border-color:color-mix(in srgb,var(--teal) 30%,var(--line));background:var(--teal-soft);color:var(--teal)}
+#tradelab-calc-page .btn-primary:hover,#tradelab-calc-page .btn-outline-blue:hover,#tradelab-calc-page .btn-outline-green:hover{background:var(--teal);color:var(--teal-ink)}
+#tradelab-calc-page .btn-ghost{border-color:var(--line);background:transparent;color:var(--ink2)}
+#tradelab-calc-page .btn-danger{border-color:color-mix(in srgb,var(--loss) 25%,var(--line));background:var(--loss-soft);color:var(--loss)}
+#tradelab-calc-page .btn-danger:hover{border-color:var(--loss);background:var(--loss);color:#fff}
+#tradelab-calc-page .btn-sm{min-height:31px;padding:5px 9px;font-size:11px}
+#tradelab-calc-page .scenario-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+#tradelab-calc-page .scenario-card{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
+#tradelab-calc-page .scenario-card-header{align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--panel2)}
+#tradelab-calc-page .scenario-name{color:var(--ink);font-size:13px;font-weight:730}
+#tradelab-calc-page .scenario-follow-controls{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap}
+#tradelab-calc-page .scenario-follow-controls label{color:var(--muted);font-size:10px}
+#tradelab-calc-page .scenario-follow-controls input{min-height:32px;border:1px solid var(--line2);border-radius:8px;background:var(--panel);color:var(--ink)}
+#tradelab-calc-page .scenario-body{padding:13px 15px}
+#tradelab-calc-page .scenario-row{gap:12px;padding:7px 0;border-color:var(--line);font-size:12px}
+#tradelab-calc-page .scenario-row .s-label{color:var(--muted)}
+#tradelab-calc-page .scenario-row .s-val{color:var(--ink);font-family:inherit;font-size:12px;font-weight:650;text-align:right}
+#tradelab-calc-page .tlc-scenario-vs{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+#tradelab-calc-page .tlc-scenario-vs>strong{display:block;margin-bottom:4px;color:var(--ink);font-size:12px}
+#tradelab-calc-page .scenarios-header{margin-bottom:12px}
+#tradelab-calc-page .goal-pill,#tradelab-calc-page .utility-card,#tradelab-calc-page .calendar-month{border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow)}
+#tradelab-calc-page .goal-pill{padding:12px 14px}
+#tradelab-calc-page .goal-pill-label,#tradelab-calc-page .goal-compare-kicker{color:var(--muted)}
+#tradelab-calc-page .goal-pill-value,#tradelab-calc-page .goal-compare-title{color:var(--ink);font-family:inherit}
+#tradelab-calc-page .calendar-toolbar{padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+#tradelab-calc-page .calendar-month{overflow:hidden}
+#tradelab-calc-page .calendar-month-title{padding:11px 13px;border-bottom:1px solid var(--line);color:var(--ink);font-family:inherit}
+#tradelab-calc-page .calendar-weekdays{color:var(--muted)}
+#tradelab-calc-page .calendar-day{border-color:var(--line)}
+#tradelab-calc-page .empty-state{padding:36px 20px;border:1px dashed var(--line2);border-radius:12px;background:var(--panel2);color:var(--muted)}
+#tradelab-calc-page .empty-icon{font-size:28px}
+#tradelab-calc-page #tlc-toast{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+@media(min-width:1025px) and (max-width:1250px){#tradelab-calc-page .main-grid{grid-template-columns:minmax(275px,.85fr) minmax(0,1.3fr);gap:14px}#tradelab-calc-page .card-body{padding:16px}}
+@media(max-width:1024px){#tradelab-calc-page .main-grid{grid-template-columns:minmax(0,1fr);gap:16px}#tradelab-calc-page .right-stack{order:0!important;gap:14px}#tradelab-calc-page aside .card{position:static}}
+@media(max-width:700px){#tradelab-calc-page .section-intro{align-items:flex-start;flex-direction:column;gap:10px;padding:16px}#tradelab-calc-page .section-intro-badge{align-self:flex-start}#tradelab-calc-page .section-toolbar{gap:7px;padding:9px;margin-bottom:13px}#tradelab-calc-page .section-toolbar .btn{flex:1 1 calc(50% - 7px);min-width:126px;padding:7px 8px}#tradelab-calc-page .section-toolbar .pill{flex:1 0 100%;margin:0!important;text-align:center}#tradelab-calc-page .card-header{align-items:flex-start;flex-wrap:wrap;padding:13px 14px 11px}#tradelab-calc-page .card-body{padding:14px}#tradelab-calc-page .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#tradelab-calc-page .stat-card{padding:12px}#tradelab-calc-page .stat-value{font-size:1.08rem}#tradelab-calc-page .tab-bar{width:100%!important}#tradelab-calc-page .tab-btn{flex:1 0 auto;padding:7px 9px;font-size:11px}#tradelab-calc-page .scenario-card-header{flex-direction:column}#tradelab-calc-page .scenario-follow-controls{width:100%}#tradelab-calc-page .scenario-follow-controls label{flex:1}#tradelab-calc-page .scenario-follow-controls input{width:100%}#tradelab-calc-page .calendar-grid-wrap{grid-template-columns:1fr}}
+@media(max-width:390px){#tradelab-calc-page .summary-grid{grid-template-columns:1fr}#tradelab-calc-page .stat-card{padding:12px 14px}#tradelab-calc-page .section-toolbar .btn{min-width:110px}#tradelab-calc-page .card-body{padding:12px}}
+</style>
+<style>
+/* Reference-inspired input grouping and clearer result hierarchy. */
+#tradelab-calc-page .tlc-input-overline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 5px;color:var(--ink);font-size:12px;font-weight:730}
+#tradelab-calc-page .tlc-input-overline span{color:var(--teal);font-size:10px;font-weight:700;letter-spacing:.04em}
+#tradelab-calc-page .tlc-step-hint{margin:0 0 14px;color:var(--muted);font-size:11px;line-height:1.5}
+#tradelab-calc-page #tlc-summaryGrid .stat-card:first-child{border-color:color-mix(in srgb,var(--teal) 34%,var(--line));background:linear-gradient(145deg,var(--teal-soft),var(--panel) 70%)}
+#tradelab-calc-page #tlc-summaryGrid .stat-card:first-child::before{height:4px;background:linear-gradient(90deg,var(--brand-primary),var(--brand-secondary))}
+#tradelab-calc-page #tlc-summaryGrid .stat-card:first-child .stat-value{font-size:clamp(1.25rem,1.8vw,1.65rem)}
+@media(min-width:701px) and (max-width:1200px){#tradelab-calc-page .main-grid{grid-template-columns:minmax(0,1fr);gap:16px}#tradelab-calc-page .right-stack{order:0!important}#tradelab-calc-page aside>.card>.card-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px;align-items:start}#tradelab-calc-page aside>.card>.card-body>.tlc-input-overline,#tradelab-calc-page aside>.card>.card-body>.tlc-step-hint,#tradelab-calc-page aside>.card>.card-body>.tlc-optional-settings{grid-column:1/-1}#tradelab-calc-page aside>.card>.card-body>.form-group:nth-of-type(3){grid-column:1/-1}#tradelab-calc-page aside>.card>.card-body>.tlc-optional-settings{margin-bottom:14px}#tradelab-calc-page aside>.card>.card-body>.tlc-optional-settings:last-child{margin-bottom:0}}
+@media(max-width:700px){#tradelab-calc-page .tlc-input-overline{margin-bottom:4px}#tradelab-calc-page .tlc-step-hint{margin-bottom:12px}}
+@media(max-width:390px){#tradelab-calc-page #tlc-summaryGrid .stat-card:first-child .stat-value{font-size:1.25rem}}
+</style>
+<style>
+/* Keep currency and percent markers clear of their values and fill each input cell. */
+#tradelab-calc-page .input-wrap{width:100%;min-width:0}
+#tradelab-calc-page .input-wrap>input{width:100%;min-width:0;flex:1 1 auto}
+#tradelab-calc-page .form-group>input[type=number],#tradelab-calc-page .form-group>input[type=text],#tradelab-calc-page .select-wrap>select{display:block;width:100%;min-width:0}
+#tradelab-calc-page .input-wrap.has-prefix>input{padding-left:34px!important}
+#tradelab-calc-page .input-wrap.has-suffix>input{padding-right:36px!important}
+#tradelab-calc-page .input-prefix{left:12px;z-index:2}
+#tradelab-calc-page .input-suffix{right:12px;z-index:2}
+</style>
+<style>
+/* Make calculator view selection obvious and give the projection schedule a quick visual read. */
+#tradelab-calc-page #tlc-calcTabBar{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+#tradelab-calc-page #tlc-calcTabBar .tab-btn{min-height:36px;padding:8px 13px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font-weight:700;transition:background .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease}
+#tradelab-calc-page #tlc-calcTabBar .tab-btn:hover{background:var(--panel);color:var(--ink)}
+#tradelab-calc-page #tlc-calcTabBar .tab-btn.active,#tradelab-calc-page #tlc-calcTabBar .tab-btn[aria-pressed=true]{border-color:var(--teal);background:var(--teal);color:var(--teal-ink);box-shadow:0 2px 8px color-mix(in srgb,var(--teal) 28%,transparent)}
+#tradelab-calc-page #tlc-calcTabBar .tab-btn:focus-visible{outline:3px solid color-mix(in srgb,var(--teal) 38%,transparent);outline-offset:2px}
+#tradelab-calc-page .projection-table-intro{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 12px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--panel2)}
+#tradelab-calc-page .projection-table-copy{display:grid;gap:3px;min-width:0}
+#tradelab-calc-page .projection-table-copy strong{color:var(--ink);font-size:13px;font-weight:750}
+#tradelab-calc-page .projection-table-copy span{color:var(--muted);font-size:11px;line-height:1.45}
+#tradelab-calc-page .projection-schedule-legend{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--ink2);font-size:10px;font-weight:700;white-space:nowrap}
+#tradelab-calc-page .projection-schedule-legend span{display:inline-flex;align-items:center;gap:6px}
+#tradelab-calc-page .projection-schedule-legend i,#tradelab-calc-page .projection-schedule-badge i{width:7px;height:7px;border-radius:50%;background:var(--teal);flex:none}
+#tradelab-calc-page .projection-schedule-legend .is-off{background:var(--muted)}
+#tradelab-calc-page .projection-table-wrapper{max-height:min(62vh,680px);overflow:auto;border:1px solid var(--line);border-radius:11px;overscroll-behavior:contain}
+#tradelab-calc-page .projection-table{width:100%;min-width:865px;border-collapse:separate;border-spacing:0;font-size:11px;font-variant-numeric:tabular-nums}
+#tradelab-calc-page .projection-table thead th{position:sticky;top:0;z-index:2;padding:11px 12px;border-bottom:1px solid var(--line2);background:var(--panel2);color:var(--ink2);font-size:9px;font-weight:750;letter-spacing:.055em;text-align:right;text-transform:uppercase;white-space:nowrap}
+#tradelab-calc-page .projection-table thead th:first-child{text-align:left}
+#tradelab-calc-page .projection-table tbody td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink2);text-align:right;white-space:nowrap}
+#tradelab-calc-page .projection-table tbody tr:last-child td{border-bottom:0}
+#tradelab-calc-page .projection-table tbody td:first-child{text-align:left}
+#tradelab-calc-page .projection-table tbody tr.projection-row.is-on td{background:color-mix(in srgb,var(--teal-soft) 48%,var(--panel))}
+#tradelab-calc-page .projection-table tbody tr.projection-row.is-off td{background:color-mix(in srgb,var(--muted) 4%,var(--panel))}
+#tradelab-calc-page .projection-table tbody tr.projection-row.is-start td{background:color-mix(in srgb,var(--panel2) 70%,var(--panel))}
+#tradelab-calc-page .projection-table tbody tr.projection-row.is-on td:first-child{box-shadow:inset 3px 0 0 var(--teal)}
+#tradelab-calc-page .projection-table tbody tr.projection-row.is-off td:first-child{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--muted) 45%,transparent)}
+#tradelab-calc-page .projection-table .projection-date{color:var(--ink);font-weight:650}
+#tradelab-calc-page .projection-table .projection-day{color:var(--muted)}
+#tradelab-calc-page .projection-table .projection-balance{color:var(--ink);font-weight:750}
+#tradelab-calc-page .projection-schedule-badge{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:54px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink2);font-size:9px;font-weight:750;line-height:1}
+#tradelab-calc-page .projection-schedule-badge.is-on{border-color:color-mix(in srgb,var(--teal) 36%,var(--line));background:var(--teal-soft);color:var(--teal)}
+#tradelab-calc-page .projection-schedule-badge.is-off{color:var(--muted)}
+#tradelab-calc-page .projection-schedule-badge.is-off i{background:var(--muted)}
+#tradelab-calc-page .projection-schedule-badge.is-start{border-color:var(--line2);background:var(--panel2);color:var(--ink2)}
+#tradelab-calc-page .projection-schedule-badge.is-start i{background:var(--muted)}
+#tradelab-calc-page .tlc-table-hint{margin-top:8px;color:var(--muted);font-size:10px;text-align:right}
+@media(max-width:700px){#tradelab-calc-page #tlc-calcTabBar{gap:2px;padding:3px}#tradelab-calc-page #tlc-calcTabBar .tab-btn{padding:7px 8px;font-size:10px}#tradelab-calc-page .projection-table-intro{align-items:flex-start;flex-direction:column;padding:11px 12px}#tradelab-calc-page .projection-schedule-legend{gap:10px}#tradelab-calc-page .projection-table-wrapper{max-height:60vh}}
+</style>
 </body>
 </html>
